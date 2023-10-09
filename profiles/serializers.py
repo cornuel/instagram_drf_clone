@@ -1,12 +1,20 @@
 from rest_framework import serializers
 from .models import Profile
 
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = ('id', 'username', 'bio', 'image')
+        
 class ProfileListSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Profile
-        fields = ('username', 'bio', 'image', 'follows')
+        fields = ('id', 'username', 'bio', 'image', 'follows')
 
 class ProfileDetailSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
@@ -15,7 +23,7 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('username', 'bio', 'image', 'follows', 'created_at', 'updated_at')
+        fields = ('id', 'username', 'bio', 'image', 'follows', 'created_at', 'updated_at')
 
     def update(self, instance, validated_data):
         instance.bio = validated_data.get('bio', instance.bio)

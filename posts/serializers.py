@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from .models import Post, Comment
 from tags.models import Tag
+from profiles.models import Profile
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import AccessToken
 from django.utils.text import slugify
 from django.db.models import F
-# from tags.serializers import TagSerializer
+from profiles.serializers import PublicProfileSerializer
 
 class TagListField(serializers.ListField):
     def to_internal_value(self, data):
@@ -32,18 +33,18 @@ class TagListField(serializers.ListField):
         return [self.child.to_representation(item) if item is not None else None for item in data.all()]
 
 class PostsListSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
+    profile = PublicProfileSerializer()
     tags = TagListField(child=serializers.CharField(), required=False)
     class Meta:
         model = Post
-        fields = ('id', 'user', 'title', 'slug', 'tags')
+        fields = ('id', 'profile', 'title', 'slug', 'tags')
         
 class PostDetailSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
     tags = TagListField(child=serializers.CharField(), required=False)
+    profile = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Post
-        fields = ('id', 'user', 'title', 'body', 'slug', 'tags', 'created', 'updated', 'upvote_count', 'view_count', 'is_featured')
+        fields = ('id', 'profile', 'title', 'body', 'slug', 'tags', 'created', 'updated', 'upvote_count', 'view_count', 'is_featured')
         lookup_field = 'slug'
         
     def create(self, validated_data):

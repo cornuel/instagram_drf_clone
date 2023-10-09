@@ -13,3 +13,7 @@ class Profile(TimestampedModel):
 
     def __str__(self):
         return self.user.username
+    
+    @property
+    def username(self):
+        return self.user.username

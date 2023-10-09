@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
+from profiles.models import Profile
 from tags.models import Tag
 from django.utils.text import slugify
 
 class Post(models.Model):
-    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete = models.CASCADE)
     title = models.CharField(max_length = 100)
     body = models.TextField()
     slug = models.SlugField(max_length=200, unique=True, blank=True)
@@ -25,7 +26,7 @@ class Post(models.Model):
         return self.title
 
 class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     body = models.TextField()
     created = models.DateTimeField(auto_now_add=True)

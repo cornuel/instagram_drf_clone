@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import ProfileDetailSerializer, ProfileListSerializer
+from .serializers import ProfileDetailSerializer, ProfileListSerializer, PublicProfileSerializer
 from .models import Profile
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
@@ -18,10 +18,15 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         :param self: The instance of the class.
         :return: The serializer class based on the current action.
         """
-        if self.action == 'list':
-            return ProfileListSerializer
-        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy']:
+        user = self.request.user
+        # Check if the authenticated user is the owner of the profile, if so, return ProfileDetailSerializer
+        if self.action == 'retrieve' and user == self.get_object().user:
             return ProfileDetailSerializer
+        
+        if self.action == 'list':
+            return PublicProfileSerializer
+        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy']:
+            return PublicProfileSerializer
         return super().get_serializer_class()
     
     def update(self, request, *args, **kwargs):

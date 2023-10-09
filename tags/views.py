@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import Tag
 from .serializers import TagSerializer
 
@@ -31,3 +32,8 @@ class TagViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         print('hi')
         return super().list(request, *args, **kwargs)
+    
+    @action(detail=False, methods=['delete'])
+    def delete_all(self, request):
+        Tag.objects.all().delete()
+        return Response("All tags have been deleted.", status=status.HTTP_204_NO_CONTENT)

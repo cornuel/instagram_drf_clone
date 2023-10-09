@@ -53,3 +53,21 @@ override `create` method to check if the `slug` already exists
 - Modified `settings.py` to add all the new apps and library, `simplejwt` config
 ## Migrations
 - `makemigrations` and `migrate` to render our initial db
+# Third commit - 10/10/23
+- Changed `IsAccountOwnerOrAdmin()` permissions to check the post Profile instead of User
+## Profiles app
+### Serializers
+- Created `PublicProfileSerializer`
+### Views
+- Modified `get_serializer_class()`, to use `PublicProfileSerializer` by default and `ProfileDetailSerializer` if user is owner of the profile
+## Posts app
+### Models
+- Changed user `model` into `profile`
+### Serializers
+- Changed list serializer to use `profile = PublicProfileSerializer()`, 
+- Changed detail serializer to use `profile = serializers.StringRelatedField(read_only=True)`, 
+### Views
+- Modified `perform_create()` to save the `profile` instead of `user`
+## Tags app
+### Views
+- Added a `delete_all()` method (for debug purpose)

@@ -51,15 +51,15 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostDetailSerializer
         return super().get_serializer_class()
     
-    def get_queryset(self):
-        username = self.request.query_params.get('username')
+    # def get_queryset(self):
+    #     username = self.request.query_params.get('username')
         
-        query = Post.objects.all()
+    #     query = Post.objects.all()
         
-        if username:
-            return query.filter(user__username=username)
+    #     if username:
+    #         return query.filter(user__username=username)
 
-        return query
+    #     return query
     
     def get_permissions(self):
         """
@@ -72,19 +72,8 @@ class PostViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permissions]
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    # def create(self, request, *args, **kwargs):
-        
-    #     tag_names = request.data.get('tags', [])
-    #     print(tag_names)
-    #     # print(request.data)
-    #     # print(request.data.get('tags'))
-    #     # tags = request.data.get('tags', [])
-    #     # for name in tags:
-    #     #     tag, _ = Tag.objects.get_or_create(slug=slugify(name), defaults={'name': name})
-    #     #     print(tag)
-    #     return super().create(request, *args, **kwargs)
+        profile = self.request.user.profile
+        serializer.save(profile=profile)
         
     def destroy(self, request, *args, **kwargs):
         """
