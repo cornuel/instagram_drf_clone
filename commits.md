@@ -86,3 +86,7 @@ override `create` method to check if the `slug` already exists
 ## Posts app
 ### Views
 - Added `toggle_favorite()`
+# Seventh commit 11/10/23
+## Posts app
+### Views
+- Modified `toggle_favorite()` to increment/decrement the `upvote_count` of the post

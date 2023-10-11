@@ -8,7 +8,7 @@ from .models import Post, Comment
 from profiles.models import Profile
 from tags.models import Tag
 from blog.permissions import IsAccountOwnerOrAdmin
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,7 +24,9 @@ class PostViewSet(viewsets.ModelViewSet):
         'update': [IsAccountOwnerOrAdmin],
         'partial_update': [IsAccountOwnerOrAdmin],
         'destroy': [IsAccountOwnerOrAdmin],
-        'toggle_feature': [IsAccountOwnerOrAdmin]
+        'toggle_feature': [IsAccountOwnerOrAdmin],
+        'toggle_toggle_favorite': [IsAuthenticated],
+        'reset_upvote_count': [IsAdminUser],
     }
     
     def permission_denied(self, request, message=None, code=None):
@@ -144,18 +146,28 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def toggle_favorite(self, request, slug=None):
-        post = self.get_object()
+        post: Post = self.get_object()
         profile = Profile.objects.prefetch_related('favorite_posts').get(user=request.user)
         
         if post in profile.favorite_posts.all():
             profile.favorite_posts.remove(post)
+            post.upvote_count -= 1
             message = 'Post removed from favorites successfully'
         else:
             profile.favorite_posts.add(post)
+            post.upvote_count += 1
             message = 'Post added to favorites successfully'
+            
+        post.save()
     
         return Response({'message': message})
     
+    @action(detail=True, methods=['post'])
+    def reset_upvote_count(self, request, slug=None):
+        post: Post = self.get_object()
+        post.upvote_count = 0
+        post.save()
+        return Response({'message': 'Post upvote count reset successfully'})
 
 # class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
 #     lookup_field = 'user'
