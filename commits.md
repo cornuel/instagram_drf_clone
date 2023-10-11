@@ -71,3 +71,7 @@ override `create` method to check if the `slug` already exists
 ## Tags app
 ### Views
 - Added a `delete_all()` method (for debug purpose)
+# Forth commit 11/10/23
+## Posts app
+### Views
+- Added `toggle_feature()` with no more than 3 featured posts active

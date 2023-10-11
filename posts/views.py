@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -22,6 +23,7 @@ class PostViewSet(viewsets.ModelViewSet):
         'update': [IsAccountOwnerOrAdmin],
         'partial_update': [IsAccountOwnerOrAdmin],
         'destroy': [IsAccountOwnerOrAdmin],
+        'toggle_feature': [IsAccountOwnerOrAdmin]
     }
     
     def permission_denied(self, request, message=None, code=None):
@@ -119,6 +121,25 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def toggle_feature(self, request, slug=None):
+        post: Post = self.get_object()
+        
+        if post.is_featured:
+            post.is_featured = False
+            post.save()
+            return Response({'message': 'Post unfeatured successfully'})
+        else:
+            # Check if the maximum limit of featured posts has been reached
+            featured_posts_count = Post.objects.filter(is_featured=True).count()
+            print(featured_posts_count)
+            if featured_posts_count >= 3:
+                return Response({'message': 'Maximum limit of featured posts reached'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                post.is_featured = True
+                post.save()
+                return Response({'message': 'Post featured successfully'})
     
 
 # class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
