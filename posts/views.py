@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from rest_framework.exceptions import NotFound
 from .serializers import PostsListSerializer, CommentSerializer, PostDetailSerializer
 from .models import Post, Comment
+from profiles.models import Profile
 from tags.models import Tag
 from blog.permissions import IsAccountOwnerOrAdmin
 from rest_framework.permissions import IsAuthenticated
@@ -122,24 +123,38 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
     
-@action(detail=True, methods=['post'])
-def toggle_feature(self, request, slug=None):
-    post: Post = self.get_object()
-    user_profile = post.profile
-    
-    if post.is_featured:
-        post.is_featured = False
+    @action(detail=True, methods=['post'])
+    def toggle_feature(self, request, slug=None):
+        post: Post = self.get_object()
+        user_profile = post.profile
+        
+        if post.is_featured:
+            post.is_featured = False
+            post.save()
+            return Response({'message': 'Post unfeatured successfully'})
+        
+        # Check if the user has more than 3 featured posts
+        featured_posts_count = Post.objects.filter(profile=user_profile, is_featured=True).count()
+        if featured_posts_count >= 3:
+            return Response({'message': 'Maximum limit of featured posts reached'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        post.is_featured = True
         post.save()
-        return Response({'message': 'Post unfeatured successfully'})
+        return Response({'message': 'Post featured successfully'})
     
-    # Check if the user has more than 3 featured posts
-    featured_posts_count = Post.objects.filter(profile=user_profile, is_featured=True).count()
-    if featured_posts_count >= 3:
-        return Response({'message': 'Maximum limit of featured posts reached'}, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=True, methods=['post'])
+    def toggle_favorite(self, request, slug=None):
+        post = self.get_object()
+        profile = Profile.objects.prefetch_related('favorite_posts').get(user=request.user)
+        
+        if post in profile.favorite_posts.all():
+            profile.favorite_posts.remove(post)
+            message = 'Post removed from favorites successfully'
+        else:
+            profile.favorite_posts.add(post)
+            message = 'Post added to favorites successfully'
     
-    post.is_featured = True
-    post.save()
-    return Response({'message': 'Post featured successfully'})
+        return Response({'message': message})
     
 
 # class UserPostViewSet(viewsets.ReadOnlyModelViewSet):

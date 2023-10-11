@@ -79,3 +79,10 @@ override `create` method to check if the `slug` already exists
 ## Posts app
 ### Views
 - Fixed bug for `toggle_feature()`, no more than 3 featured posts active *per user*!
+# Sixth commit 11/10/23
+## Profiles app
+### Models
+- Added `favorite_posts`
+## Posts app
+### Views
+- Added `toggle_favorite()`
