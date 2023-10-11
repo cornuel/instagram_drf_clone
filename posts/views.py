@@ -122,24 +122,24 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'])
-    def toggle_feature(self, request, slug=None):
-        post: Post = self.get_object()
-        
-        if post.is_featured:
-            post.is_featured = False
-            post.save()
-            return Response({'message': 'Post unfeatured successfully'})
-        else:
-            # Check if the maximum limit of featured posts has been reached
-            featured_posts_count = Post.objects.filter(is_featured=True).count()
-            print(featured_posts_count)
-            if featured_posts_count >= 3:
-                return Response({'message': 'Maximum limit of featured posts reached'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                post.is_featured = True
-                post.save()
-                return Response({'message': 'Post featured successfully'})
+@action(detail=True, methods=['post'])
+def toggle_feature(self, request, slug=None):
+    post: Post = self.get_object()
+    user_profile = post.profile
+    
+    if post.is_featured:
+        post.is_featured = False
+        post.save()
+        return Response({'message': 'Post unfeatured successfully'})
+    
+    # Check if the user has more than 3 featured posts
+    featured_posts_count = Post.objects.filter(profile=user_profile, is_featured=True).count()
+    if featured_posts_count >= 3:
+        return Response({'message': 'Maximum limit of featured posts reached'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    post.is_featured = True
+    post.save()
+    return Response({'message': 'Post featured successfully'})
     
 
 # class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
