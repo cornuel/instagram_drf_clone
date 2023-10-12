@@ -1,34 +1,80 @@
 from rest_framework import serializers
 from .models import Profile
 
+class SimpleProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = (
+            'id', 
+            'username',
+            'full_name',
+            'profile_pic_url'
+        )
 
 class PublicProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
+    following_count = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+    
+    def get_following_count(self, obj):
+        return obj.follows.count()
+    def get_followers_count(self, obj):
+        return obj.followed_by.count()
 
     class Meta:
         model = Profile
-        fields = ('id', 'username', 'bio', 'image')
+        fields = (
+            'id',
+            'username',
+            'full_name',
+            'bio', 
+            'profile_pic_url',
+            'following_count', 
+            'followers_count',
+        )
         
 class ProfileListSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Profile
-        fields = ('id', 'username', 'bio', 'image', 'follows')
+        fields = (
+            'id', 
+            'full_name',
+            'bio',
+            'profile_pic_url',
+            'follows'
+        )
 
 class ProfileDetailSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
-    bio = serializers.CharField(required=False)
-    image = serializers.URLField(required=False)
     favorite_posts = serializers.SlugRelatedField(
         many=True, 
         slug_field='slug', 
         read_only=True
     )
+    following_count = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+    
+    def get_following_count(self, obj):
+        return obj.follows.count()
+    def get_followers_count(self, obj):
+        return obj.followed_by.count()
 
     class Meta:
         model = Profile
-        fields = ('id', 'username', 'bio', 'image','favorite_posts', 'follows', 'created_at', 'updated_at')
+        fields = (
+            'id', 
+            'username', 
+            'full_name',
+            'bio',
+            'profile_pic_url',
+            'favorite_posts', 
+            'following_count', 
+            'followers_count', 
+            'created_at', 
+            'updated_at'
+        )
 
     def update(self, instance, validated_data):
         instance.bio = validated_data.get('bio', instance.bio)

@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from .serializers import ProfileDetailSerializer, ProfileListSerializer, PublicProfileSerializer
+from .serializers import ProfileDetailSerializer, ProfileListSerializer, PublicProfileSerializer, SimpleProfileSerializer
 from .models import Profile
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 
 # Create your views here.
@@ -38,4 +39,34 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def follow(self, request, user__username=None):
+        profile = self.get_object()
+        
+        if request.user.profile != profile:
+            if request.user.profile.follows.filter(user__username=user__username).exists():
+                request.user.profile.follows.remove(profile)
+                message = f'You have unfollowed {profile.username}'
+            else:
+                request.user.profile.follows.add(profile)
+                message = f'You are now following {profile.username}'
+        else:
+            message = 'You cannot follow yourself'
+        
+        return Response({'message': message})
+    
+    @action(detail=True, methods=['get'])
+    def following(self, request, user__username=None):
+        profile = self.get_object()
+        followers = profile.follows.all()
+        serializer = SimpleProfileSerializer(followers, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def followers(self, request, user__username=None):
+        profile = self.get_object()
+        following = profile.followed_by.all()
+        serializer = SimpleProfileSerializer(following, many=True)
         return Response(serializer.data)

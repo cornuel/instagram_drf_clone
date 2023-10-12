@@ -90,3 +90,13 @@ override `create` method to check if the `slug` already exists
 ## Posts app
 ### Views
 - Modified `toggle_favorite()` to increment/decrement the `upvote_count` of the post
+# Eighth commit 11/10/23
+## Profiles app
+### Views
+- Added POST `follow()`, GET `following()` and GET `followers()`
+### Serializers
+- Added `SimpleProfileSerializer` to simply serialize the following/followers profile list
+- Added manually calculated `following_count` and `followers_count`
+### Models
+- Renamed `image` with `profile_pic_url`
+- Added `full_name` char field
