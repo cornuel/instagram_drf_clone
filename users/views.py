@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAdminUser
-from blog.permissions import IsAccountOwnerOrAdmin
+from app.permissions import IsAccountOwnerOrAdmin
 from rest_framework import status
 
 class UsersViewSet(viewsets.ModelViewSet):

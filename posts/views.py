@@ -7,7 +7,7 @@ from .serializers import PostsListSerializer, CommentSerializer, PostDetailSeria
 from .models import Post, Comment
 from profiles.models import Profile
 from tags.models import Tag
-from blog.permissions import IsAccountOwnerOrAdmin
+from app.permissions import IsAccountOwnerOrAdmin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response

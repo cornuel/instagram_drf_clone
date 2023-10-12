@@ -100,3 +100,5 @@ override `create` method to check if the `slug` already exists
 ### Models
 - Renamed `image` with `profile_pic_url`
 - Added `full_name` char field
+# Ninth commit
+- Renamed app name from `blog` to `app`
