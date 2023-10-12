@@ -100,5 +100,13 @@ override `create` method to check if the `slug` already exists
 ### Models
 - Renamed `image` with `profile_pic_url`
 - Added `full_name` char field
-# Ninth commit
+# Ninth commit 12/10/23
 - Renamed app name from `blog` to `app`
+# Tenth commit 12/10/23
+## Posts app
+### Models
+- Added `likes`, a manytomany rel with `Profile`
+### Views
+- Added the action `like`
+### Serializers
+- Added manually calculated `like_count`

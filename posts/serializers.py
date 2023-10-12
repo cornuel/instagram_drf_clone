@@ -35,16 +35,43 @@ class TagListField(serializers.ListField):
 class PostsListSerializer(serializers.ModelSerializer):
     profile = PublicProfileSerializer()
     tags = TagListField(child=serializers.CharField(), required=False)
+    like_count = serializers.SerializerMethodField()
+    
+    def get_like_count(self, obj):
+        return obj.likes.count()
     class Meta:
         model = Post
-        fields = ('id', 'profile', 'title', 'slug', 'tags')
+        fields = (
+            'id', 
+            'profile', 
+            'title', 
+            'slug', 
+            'tags', 
+            'like_count'
+        )
         
 class PostDetailSerializer(serializers.ModelSerializer):
     tags = TagListField(child=serializers.CharField(), required=False)
     profile = serializers.StringRelatedField(read_only=True)
+    like_count = serializers.SerializerMethodField()
+    
+    def get_like_count(self, obj):
+        return obj.likes.count()
     class Meta:
         model = Post
-        fields = ('id', 'profile', 'title', 'body', 'slug', 'tags', 'created', 'updated', 'upvote_count', 'view_count', 'is_featured')
+        fields = (
+            'id', 
+            'profile', 
+            'title', 
+            'body', 
+            'slug', 
+            'tags', 
+            'created', 
+            'updated', 
+            'like_count', 
+            'view_count', 
+            'is_featured'
+        )
         lookup_field = 'slug'
         
     def create(self, validated_data):

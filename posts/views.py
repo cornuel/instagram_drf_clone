@@ -163,6 +163,20 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response({'message': message})
     
     @action(detail=True, methods=['post'])
+    def like(self, request, slug=None):
+        post: Post = self.get_object()
+        liked = post.likes.filter(user=request.user).exists()
+
+        if liked:
+            post.likes.remove(request.user.profile)
+            post.save()
+            return Response({'message': 'Post unliked successfully'})
+        else:
+            post.likes.add(request.user.profile)
+            post.save()
+            return Response({'message': 'Post liked successfully'})
+    
+    @action(detail=True, methods=['post'])
     def reset_upvote_count(self, request, slug=None):
         post: Post = self.get_object()
         post.upvote_count = 0

@@ -11,7 +11,7 @@ class Post(models.Model):
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     created = models.DateTimeField(auto_now_add = True)
     updated = models.DateTimeField(auto_now = True)
-    upvote_count = models.IntegerField(default = 0)
+    likes = models.ManyToManyField(Profile, blank=True, related_name='liked_by')
     view_count = models.IntegerField(null=True, blank=True)
     is_featured = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, blank=True)

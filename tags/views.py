@@ -15,7 +15,6 @@ class TagViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         name = request.data.get('name')
         slug = slugify(name)
-        print(slug)
         
         try:
             tag = Tag.objects.get(slug=slug)
@@ -30,7 +29,6 @@ class TagViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         
     def list(self, request, *args, **kwargs):
-        print('hi')
         return super().list(request, *args, **kwargs)
     
     @action(detail=False, methods=['delete'])
