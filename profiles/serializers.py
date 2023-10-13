@@ -34,7 +34,6 @@ class PublicProfileSerializer(serializers.ModelSerializer):
         )
         
 class ProfileListSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Profile

@@ -125,3 +125,10 @@ override `create` method to check if the `slug` already exists
 ### Views
 - Strongley typed every views
 - Added `posts()` to see every posts per user
+
+# Commit 12 - 13/10/23
+## App
+- Added `paginate_objects()`, a utility function that returns a paginated and serialized list of objects
+## Profiles app
+### Views
+- Use of `paginate_objects()` inside `followers` and `following` actions

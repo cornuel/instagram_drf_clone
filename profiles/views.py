@@ -7,13 +7,11 @@ from posts.models import Post
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.request import Request
 from rest_framework.decorators import action
 from rest_framework import status
 from typing import List
-
-
-# Create your views here.
+from app.utils import paginate_objects
+    
 class ProfileModelViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     lookup_field = 'user__username'
@@ -26,16 +24,17 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         :return: The serializer class based on the current action.
         """
         user: User = self.request.user
-        instance: Profile = self.get_object()
         # Check if the authenticated user is the owner of the profile, if so, return ProfileDetailSerializer
-        if self.action == 'retrieve' and user == instance.user:
-            return ProfileDetailSerializer
+        if self.action == 'retrieve':
+            if self.get_object().user == user:
+                return ProfileDetailSerializer
         
         if self.action == 'list':
-            return PublicProfileSerializer
+            return ProfileListSerializer
         if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy']:
             return PublicProfileSerializer
         return super().get_serializer_class()
+    
     
     def update(self, request, *args, **kwargs):
         """
@@ -108,10 +107,10 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         Returns:
             Response: The serialized data of the following.
         """
+        
         profile: Profile = self.get_object()
         following: List[Profile] = profile.follows.all()
-        serializer = SimpleProfileSerializer(following, many=True)
-        return Response(serializer.data)
+        return paginate_objects(following, request, serializer=PublicProfileSerializer, page_size=10)
     
     @action(detail=True, methods=['get'])
     def followers(self, request, user__username: str =None) -> Response:
@@ -125,5 +124,4 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         """
         profile: Profile = self.get_object()
         followers: List[Profile] = profile.followed_by.all()
-        serializer = SimpleProfileSerializer(followers, many=True)
-        return Response(serializer.data)
+        return paginate_objects(followers, request, serializer=PublicProfileSerializer, page_size=10)
