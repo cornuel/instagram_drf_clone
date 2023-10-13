@@ -5,7 +5,7 @@ from tags.models import Tag
 from django.utils.text import slugify
 
 class Post(models.Model):
-    profile = models.ForeignKey(Profile, on_delete = models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete = models.CASCADE, related_name='posts')
     title = models.CharField(max_length = 100)
     body = models.TextField()
     slug = models.SlugField(max_length=200, unique=True, blank=True)

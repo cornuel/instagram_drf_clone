@@ -15,6 +15,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 
 
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     lookup_field = 'slug'
@@ -24,8 +25,8 @@ class PostViewSet(viewsets.ModelViewSet):
         'update': [IsAccountOwnerOrAdmin],
         'partial_update': [IsAccountOwnerOrAdmin],
         'destroy': [IsAccountOwnerOrAdmin],
-        'toggle_feature': [IsAccountOwnerOrAdmin],
-        'toggle_toggle_favorite': [IsAuthenticated],
+        'feature': [IsAccountOwnerOrAdmin],
+        'favorite': [IsAuthenticated],
         'reset_upvote_count': [IsAdminUser],
     }
     
@@ -52,7 +53,7 @@ class PostViewSet(viewsets.ModelViewSet):
         """
         if self.action == 'list':
             return PostsListSerializer
-        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy']:
+        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy', 'feature', 'like']:
             return PostDetailSerializer
         return super().get_serializer_class()
     
@@ -126,63 +127,91 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
-    def toggle_feature(self, request, slug=None):
+    def feature(self, request, slug: str=None):
+        """
+        Feature or unfeature a post based on the given slug.
+        Parameters:
+            request (Request): The request object.
+            slug (str, optional): The slug of the post. Defaults to None.
+        Returns:
+            Response: The response object containing the status and message.
+        """
         post: Post = self.get_object()
-        user_profile = post.profile
+        user_profile: Profile = post.profile
+        
+        if user_profile != request.user.profile:
+            return Response({
+                'message': 'You are not allowed to feature this post.', 
+                'status': status.HTTP_403_FORBIDDEN
+            })
         
         if post.is_featured:
             post.is_featured = False
             post.save()
-            return Response({'message': 'Post unfeatured successfully'})
+            serializer = self.get_serializer(post)
+            return Response({
+                'message': 'Post unfeatured successfully.',
+                'status': status.HTTP_200_OK,
+                'data': serializer.data
+            })
         
         # Check if the user has more than 3 featured posts
-        featured_posts_count = Post.objects.filter(profile=user_profile, is_featured=True).count()
+        featured_posts_count: int = Post.objects.filter(profile=user_profile, is_featured=True).count()
         if featured_posts_count >= 3:
-            return Response({'message': 'Maximum limit of featured posts reached'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'message': 'Maximum limit of featured posts reached', 
+                'status': status.HTTP_400_BAD_REQUEST
+            })
         
         post.is_featured = True
         post.save()
-        return Response({'message': 'Post featured successfully'})
+        serializer = self.get_serializer(post)
+        return Response({
+            'message': 'Post featured successfully',
+            'status': status.HTTP_200_OK,
+            'data': serializer.data
+        })
     
     @action(detail=True, methods=['post'])
-    def toggle_favorite(self, request, slug=None):
+    def favorite(self, request, slug: str =None):
         post: Post = self.get_object()
         profile = Profile.objects.prefetch_related('favorite_posts').get(user=request.user)
         
         if post in profile.favorite_posts.all():
             profile.favorite_posts.remove(post)
-            post.upvote_count -= 1
             message = 'Post removed from favorites successfully'
         else:
             profile.favorite_posts.add(post)
-            post.upvote_count += 1
             message = 'Post added to favorites successfully'
             
-        post.save()
-    
-        return Response({'message': message})
+        profile.save()
+        return Response({
+            'message': message, 
+            'status': status.HTTP_200_OK
+        })
     
     @action(detail=True, methods=['post'])
-    def like(self, request, slug=None):
+    def like(self, request, slug: str =None):
         post: Post = self.get_object()
-        liked = post.likes.filter(user=request.user).exists()
+        profile: Profile = request.user.profile
+        liked: bool = post.likes.filter(user=request.user).exists()
 
         if liked:
-            post.likes.remove(request.user.profile)
-            post.save()
-            return Response({'message': 'Post unliked successfully'})
+            post.likes.remove(profile)
+            message = 'Post unliked successfully'
         else:
-            post.likes.add(request.user.profile)
-            post.save()
-            return Response({'message': 'Post liked successfully'})
-    
-    @action(detail=True, methods=['post'])
-    def reset_upvote_count(self, request, slug=None):
-        post: Post = self.get_object()
-        post.upvote_count = 0
+            post.likes.add(profile)
+            message = 'Post liked successfully'
+        
         post.save()
-        return Response({'message': 'Post upvote count reset successfully'})
-
+        serializer = self.get_serializer(post)
+        
+        return Response({
+            'message': message, 
+            'status': status.HTTP_200_OK,
+            'data': serializer.data
+            })
+    
 # class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
 #     lookup_field = 'user'
 

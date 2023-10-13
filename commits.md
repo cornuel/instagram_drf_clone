@@ -110,3 +110,18 @@ override `create` method to check if the `slug` already exists
 - Added the action `like`
 ### Serializers
 - Added manually calculated `like_count`
+# Commit 11 - 12/10/23
+## Posts app
+### Models
+- Added reverse relation for `profile` to gain access to the posts of a profile
+### Views
+- Strongely typed every views
+- Removed `reset_upvote_count()`
+- Renamed `toggle_favorite()` -> `favorite()`
+- Renamed `toggle_featured()` -> `feature()`
+### Serializers
+- Added `is_liked` and `is_favorited`
+## Profiles app
+### Views
+- Strongley typed every views
+- Added `posts()` to see every posts per user

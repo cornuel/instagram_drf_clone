@@ -54,9 +54,23 @@ class PostDetailSerializer(serializers.ModelSerializer):
     tags = TagListField(child=serializers.CharField(), required=False)
     profile = serializers.StringRelatedField(read_only=True)
     like_count = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
     
-    def get_like_count(self, obj):
+    def get_is_liked(self, obj: Post):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(id=request.user.profile.id).exists()
+        return False
+    
+    def get_like_count(self, obj: Post):
         return obj.likes.count()
+    
+    def get_is_favorited(self, obj: Post):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.favorited_by.filter(id=request.user.profile.id).exists()
+        return False
     class Meta:
         model = Post
         fields = (
@@ -67,7 +81,9 @@ class PostDetailSerializer(serializers.ModelSerializer):
             'slug', 
             'tags', 
             'created', 
-            'updated', 
+            'updated',
+            'is_liked',
+            'is_favorited',
             'like_count', 
             'view_count', 
             'is_featured'

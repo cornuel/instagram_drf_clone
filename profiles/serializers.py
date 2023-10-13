@@ -16,9 +16,9 @@ class PublicProfileSerializer(serializers.ModelSerializer):
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     
-    def get_following_count(self, obj):
+    def get_following_count(self, obj: Profile):
         return obj.follows.count()
-    def get_followers_count(self, obj):
+    def get_followers_count(self, obj: Profile):
         return obj.followed_by.count()
 
     class Meta:
@@ -56,9 +56,9 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     
-    def get_following_count(self, obj):
+    def get_following_count(self, obj: Profile):
         return obj.follows.count()
-    def get_followers_count(self, obj):
+    def get_followers_count(self, obj: Profile):
         return obj.followed_by.count()
 
     class Meta:
