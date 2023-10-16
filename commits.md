@@ -132,3 +132,10 @@ override `create` method to check if the `slug` already exists
 ## Profiles app
 ### Views
 - Use of `paginate_objects()` inside `followers` and `following` actions
+
+# Commit 13 - 16/10/23
+## App
+- Deleted `paginate_objects()` as it is not needed
+## Posts app
+### Views
+- Added a `tags()` view to see every tags linked to a post

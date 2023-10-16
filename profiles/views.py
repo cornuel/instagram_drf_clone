@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
 from typing import List
-from app.utils import paginate_objects
     
 class ProfileModelViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -31,8 +30,10 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         
         if self.action == 'list':
             return ProfileListSerializer
-        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy']:
+        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy', 'following', 'followers']:
             return PublicProfileSerializer
+        if self.action == 'posts':
+            return PostsListSerializer
         return super().get_serializer_class()
     
     
@@ -68,8 +69,8 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         """
         profile: Profile = self.get_object()
         posts: Post = profile.posts.all()
-        serializer = PostsListSerializer(posts, many=True)
-        return Response(serializer.data)
+        serializer = self.get_serializer(posts, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
     
     @action(detail=True, methods=['post'])
     def follow(self, request, user__username: str = None) -> Response:
@@ -110,7 +111,8 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         
         profile: Profile = self.get_object()
         following: List[Profile] = profile.follows.all()
-        return paginate_objects(following, request, serializer=PublicProfileSerializer, page_size=10)
+        serializer = self.get_serializer(following, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
     
     @action(detail=True, methods=['get'])
     def followers(self, request, user__username: str =None) -> Response:
@@ -124,4 +126,5 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         """
         profile: Profile = self.get_object()
         followers: List[Profile] = profile.followed_by.all()
-        return paginate_objects(followers, request, serializer=PublicProfileSerializer, page_size=10)
+        serializer = self.get_serializer(followers, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))

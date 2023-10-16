@@ -7,12 +7,14 @@ from .serializers import PostsListSerializer, CommentSerializer, PostDetailSeria
 from .models import Post, Comment
 from profiles.models import Profile
 from tags.models import Tag
+from tags.serializers import TagSerializer
 from app.permissions import IsAccountOwnerOrAdmin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from typing import List
 
 
 
@@ -55,6 +57,8 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostsListSerializer
         if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy', 'feature', 'like']:
             return PostDetailSerializer
+        if self.action == 'tags':
+            return TagSerializer
         return super().get_serializer_class()
     
     # def get_queryset(self):
@@ -125,6 +129,22 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def tags(self, request, slug: str=None) -> Response:
+        """
+        Get the tags associated with a post.
+        
+        Parameters:
+            request (Request): The request object.
+            slug (str, optional): The slug of the post. Defaults to None.
+        Returns:
+            Response: The response object containing the serialized data of the tags.
+        """
+        post: Post = self.get_object()
+        tags: List[Tag] = post.tags.all()
+        serializer = self.get_serializer(tags, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
     
     @action(detail=True, methods=['post'])
     def feature(self, request, slug: str=None):
