@@ -139,3 +139,13 @@ override `create` method to check if the `slug` already exists
 ## Posts app
 ### Views
 - Added a `tags()` view to see every tags linked to a post
+
+# Commit 14 - 25/10/23
+## App
+- Modified *IsAccountOwnerOrAdmin()* to make it work on users objects or profiles object
+## Profiles app
+### Views
+- Added permissions
+## Users app
+### Views
+- Added permissions, the goal is to not be able to modify a User but rather a Profile tied to a User

@@ -9,11 +9,24 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from app.permissions import IsAccountOwnerOrAdmin
 from typing import List
     
 class ProfileModelViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     lookup_field = 'user__username'
+    
+    permission_classes = {
+        'list': [IsAdminUser],
+        'retrieve': [IsAuthenticated],
+        'update': [IsAccountOwnerOrAdmin],
+        'partial_update': [IsAccountOwnerOrAdmin],
+        'destroy': [IsAccountOwnerOrAdmin],
+        'following': [IsAuthenticated],
+        'followers': [IsAuthenticated],
+        'posts': [IsAuthenticated],
+    }
     
     def get_serializer_class(self):
         """
@@ -36,6 +49,21 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
             return PostsListSerializer
         return super().get_serializer_class()
     
+    def get_permissions(self):
+        """
+        Returns the list of permission instances that the current user has for the given action.
+
+        :return: A list of permission instances.
+        :rtype: list
+        """
+        permissions = self.permission_classes.get(self.action, [])
+        return [permission() for permission in permissions]
+    
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
         """

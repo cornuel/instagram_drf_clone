@@ -9,11 +9,14 @@ from rest_framework import status
 class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
+    lookup_field = 'username'
+    
     
     permission_classes = {
         'list': [IsAdminUser],
         'destroy': [IsAccountOwnerOrAdmin],
     }
+    
     
     def get_permissions(self):
         """
@@ -24,3 +27,12 @@ class UsersViewSet(viewsets.ModelViewSet):
         """
         permissions = self.permission_classes.get(self.action, [])
         return [permission() for permission in permissions]
+    
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
