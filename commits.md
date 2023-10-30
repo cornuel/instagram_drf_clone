@@ -149,3 +149,16 @@ override `create` method to check if the `slug` already exists
 ## Users app
 ### Views
 - Added permissions, the goal is to not be able to modify a User but rather a Profile tied to a User
+
+# Commit 15 - 30/10/23
+## Comments app
+- Added the comments app
+### Views
+- like a comment
+- #TODO - update 
+### Serializer
+### Model
+## Posts app
+### Views
+- Added a *comments* action to see all comment with depth level of 1 (no subcomments)
+- Added a *comment* action to see comments under a comment parent

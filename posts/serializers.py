@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, Comment
+from .models import Post
 from tags.models import Tag
 from profiles.models import Profile
 from django.contrib.auth.models import User
@@ -161,9 +161,3 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
         # Delete the instance
         instance.delete()
-        
-class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source = 'user.username')
-    class Meta:
-        model = Comment
-        fields = ('id', 'user', 'post', 'body', 'created', 'parent')

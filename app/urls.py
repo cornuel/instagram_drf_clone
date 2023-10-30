@@ -5,12 +5,14 @@ from users import views as users_views
 from profiles import views as profiles_views
 from posts import views as posts_views
 from tags import views as tags_views
+from comments import views as comments_views
 
 router = routers.DefaultRouter()
 router.register(r'users', users_views.UsersViewSet,  basename='users')
 router.register(r'profiles', profiles_views.ProfileModelViewSet,  basename='profiles')
 router.register(r'posts', posts_views.PostViewSet,  basename='posts')
 router.register(r'tags', tags_views.TagViewSet,  basename='tags')
+router.register(r'comments', comments_views.CommentViewSet,  basename='comments')
 
 urlpatterns = [
     path("admin/", admin.site.urls),

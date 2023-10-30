@@ -3,11 +3,13 @@ from django.db import IntegrityError
 from django.utils.text import slugify
 from rest_framework import viewsets
 from rest_framework.exceptions import NotFound
-from .serializers import PostsListSerializer, CommentSerializer, PostDetailSerializer
-from .models import Post, Comment
+from .serializers import PostsListSerializer, PostDetailSerializer
+from .models import Post
 from profiles.models import Profile
 from tags.models import Tag
 from tags.serializers import TagSerializer
+from comments.models import Comment
+from comments.serializers import CommentSerializer
 from app.permissions import IsAccountOwnerOrAdmin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -15,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from typing import List
+from rich import print as rprint
 
 
 
@@ -231,6 +234,22 @@ class PostViewSet(viewsets.ModelViewSet):
             'status': status.HTTP_200_OK,
             'data': serializer.data
             })
+        
+    @action(detail=True, methods=['get'], serializer_class=CommentSerializer)
+    def comments(self, request, slug: str=None):
+        if self.request.method == 'GET':
+            post: Post = self.get_object()
+            comments = post.comments.filter(parent=None)
+            serializer = self.get_serializer(comments, many=True)
+            return self.get_paginated_response(self.paginate_queryset(serializer.data))
+        
+    @action(detail=True, methods=['get'], url_path='comment/(?P<comment_id>\d+)', serializer_class=CommentSerializer)
+    def comment(self, request, slug=None, comment_id=None):
+        post: Post = self.get_object()
+        comment = post.comments.get(id=comment_id)
+        subcomments = comment.replies.all()
+        serializer = self.get_serializer(subcomments, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
     
 # class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
 #     lookup_field = 'user'
@@ -254,8 +273,3 @@ class PostViewSet(viewsets.ModelViewSet):
 
 #         # If the user exists, filter posts by that user
 #         return Post.objects.filter(user=user)
-
-    
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    queryset = Comment.objects.all()
