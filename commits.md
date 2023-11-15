@@ -167,3 +167,27 @@ override `create` method to check if the `slug` already exists
 ## Comments app
 ### Views
 - update a comment
+
+# Commit 17
+
+## Settings.py
+- configured a connection to a S3 bucket to upload ImageFields
+- configured a connection to a Neon postgresSQL db
+
+## Posts app
+### Views
+- added `delete_all_posts()` action to delete all a users posts at once
+- `list()` lists only the requesting user's posts
+### Serializers
+- added image
+### Models
+- added `image` a ImageField
+- added a signal to delete the image from the directory when a post is deleted
+
+## App
+- added a `utils.py` file
+## Profiles app
+### Models
+- added `profile_pic` a ImageField
+### Serializers
+- added `profile_pic` field

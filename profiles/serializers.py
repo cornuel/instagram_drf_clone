@@ -1,23 +1,26 @@
 from rest_framework import serializers
 from .models import Profile
 
+
 class SimpleProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = (
-            'id', 
+            'id',
             'username',
             'full_name',
-            'profile_pic_url'
+            'profile_pic'
         )
+
 
 class PublicProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
-    
+
     def get_following_count(self, obj: Profile):
         return obj.follows.count()
+
     def get_followers_count(self, obj: Profile):
         return obj.followed_by.count()
 
@@ -27,51 +30,54 @@ class PublicProfileSerializer(serializers.ModelSerializer):
             'id',
             'username',
             'full_name',
-            'bio', 
-            'profile_pic_url',
-            'following_count', 
+            'bio',
+            'profile_pic',
+            'following_count',
             'followers_count',
         )
-        
+
+
 class ProfileListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
         fields = (
-            'id', 
+            'id',
             'full_name',
             'bio',
-            'profile_pic_url',
+            'profile_pic',
             'follows'
         )
+
 
 class ProfileDetailSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     favorite_posts = serializers.SlugRelatedField(
-        many=True, 
-        slug_field='slug', 
+        many=True,
+        slug_field='slug',
         read_only=True
     )
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
-    
+
     def get_following_count(self, obj: Profile):
         return obj.follows.count()
+
     def get_followers_count(self, obj: Profile):
         return obj.followed_by.count()
 
     class Meta:
         model = Profile
         fields = (
-            'id', 
-            'username', 
+            'id',
+            'username',
             'full_name',
             'bio',
-            'profile_pic_url',
-            'favorite_posts', 
-            'following_count', 
-            'followers_count', 
-            'created_at', 
+            'profile_pic',
+            'favorite_posts',
+            'following_count',
+            'followers_count',
+            'created_at',
             'updated_at'
         )
 
