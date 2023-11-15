@@ -164,3 +164,6 @@ override `create` method to check if the `slug` already exists
 - Added a *comment* action to see comments under a comment parent
 
 # Commit 16
+## Comments app
+### Views
+- update a comment
