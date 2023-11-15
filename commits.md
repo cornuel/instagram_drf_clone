@@ -162,3 +162,5 @@ override `create` method to check if the `slug` already exists
 ### Views
 - Added a *comments* action to see all comment with depth level of 1 (no subcomments)
 - Added a *comment* action to see comments under a comment parent
+
+# Commit 16

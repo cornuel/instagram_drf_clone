@@ -12,11 +12,13 @@ from rest_framework import status
 from rich import print as rprint
 
 # Create your views here.
+
+
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     lookup_field = 'id'
-    
+
     permission_classes = {
         'retrieve': [IsAuthenticated],
         'create': [IsAuthenticated],
@@ -24,7 +26,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         'partial_update': [IsAccountOwnerOrAdmin],
         'destroy': [IsAccountOwnerOrAdmin],
     }
-    
+
     def get_permissions(self):
         """
         Returns the list of permission instances that the current user has for the given action.
@@ -34,7 +36,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         """
         permissions = self.permission_classes.get(self.action, [])
         return [permission() for permission in permissions]
-    
+
     def permission_denied(self, request, message=None, code=None):
         action = self.action  # Get the current action name
         if action == 'destroy':
@@ -47,19 +49,36 @@ class CommentViewSet(viewsets.ModelViewSet):
             error_message = "Permission denied."
 
         raise PermissionDenied(error_message)
-    
+
     def get_serializer_class(self):
         return super().get_serializer_class()
-    
+
     def perform_create(self, serializer):
         profile = self.request.user.profile
         serializer.save(profile=profile)
-        
+
     def list(self, request, post_id=None):
         queryset = self.queryset.filter(post__id=post_id)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
+    def update(self, request, *args, **kwargs):
+
+        instance = self.get_object()
+
+        # Don't allow updating the post and parent field
+        data = request.data.copy()
+        data.pop('post', None)
+        data.pop('parent', None)
+
+        serializer = self.get_serializer(instance,
+                                         data=data,
+                                         partial=True)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
     def destroy(self, request, *args, **kwargs):
         """
         Deletes an instance of the object.
@@ -82,9 +101,9 @@ class CommentViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response("An error occurred while deleting the object.", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
     @action(detail=True, methods=['post'])
-    def like(self, request, id: int =None):
+    def like(self, request, id: int = None):
         comment: Comment = self.get_object()
         profile: Profile = request.user.profile
         liked: bool = comment.likes.filter(user=request.user).exists()
@@ -95,12 +114,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         else:
             comment.likes.add(profile)
             message = 'Comment liked successfully'
-        
+
         comment.save()
         serializer = self.get_serializer(comment)
-        
+
         return Response({
-            'message': message, 
+            'message': message,
             'status': status.HTTP_200_OK,
             'data': serializer.data
-            })
+        })
