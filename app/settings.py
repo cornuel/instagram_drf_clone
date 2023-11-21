@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'users',
     'profiles',
     'tags',
+    'feed',
     'django_extensions',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
@@ -87,7 +88,7 @@ AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
 AWS_S3_SIGNATURE_VERSION = config('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_ADDRESSING_STYLE = config('AWS_S3_ADDRESSING_STYLE')
-AWS_S3_VERIFY = config('AWS_S3_VERIFY')
+AWS_S3_VERIFY = config('AWS_S3_VERIFY', default=None)
 
 STORAGES = {
     "default": {

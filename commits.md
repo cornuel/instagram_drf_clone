@@ -191,3 +191,6 @@ override `create` method to check if the `slug` already exists
 - added `profile_pic` a ImageField
 ### Serializers
 - added `profile_pic` field
+
+# Commit 18
+## Added Feed app
