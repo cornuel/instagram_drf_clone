@@ -40,6 +40,8 @@ class PostsListSerializer(serializers.ModelSerializer):
     tags = TagListField(child=serializers.CharField(), required=False)
     like_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
+    url = serializers.HyperlinkedIdentityField(
+        many=False, view_name='posts-detail', lookup_field='slug')
 
     def get_like_count(self, obj):
         return obj.likes.count()
@@ -57,8 +59,15 @@ class PostsListSerializer(serializers.ModelSerializer):
             'slug',
             'tags',
             'like_count',
-            'comment_count'
+            'comment_count',
+            'url'
         )
+
+
+class PersonalPostListSerializer(PostsListSerializer):
+    class Meta:
+        model = Post
+        fields = PostsListSerializer.Meta.fields + ('is_private',)
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
@@ -67,6 +76,9 @@ class PostDetailSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+    url = serializers.HyperlinkedIdentityField(
+        many=False, view_name='posts-detail', lookup_field='slug')
 
     def get_is_liked(self, obj: Post):
         request = self.context.get('request')
@@ -82,6 +94,9 @@ class PostDetailSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.favorited_by.filter(id=request.user.profile.id).exists()
         return False
+
+    def get_comment_count(self, obj: Post):
+        return obj.comments.count()
 
     class Meta:
         model = Post
@@ -99,7 +114,9 @@ class PostDetailSerializer(serializers.ModelSerializer):
             'is_favorited',
             'like_count',
             'view_count',
-            'is_featured'
+            'comment_count',
+            'is_featured',
+            'url'
         )
         lookup_field = 'slug'
 
@@ -175,3 +192,9 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
         # Delete the instance
         instance.delete()
+
+
+class PersonalPostDetailSerializer(PostDetailSerializer):
+    class Meta:
+        model = Post
+        fields = PostDetailSerializer.Meta.fields + ('is_private',)

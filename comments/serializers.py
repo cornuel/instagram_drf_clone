@@ -14,6 +14,8 @@ class CommentSerializer(serializers.ModelSerializer):
     profile = serializers.StringRelatedField(read_only=True)
     like_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    url = serializers.HyperlinkedIdentityField(
+        many=False, view_name='comments-detail', lookup_field='id')
 
     def get_is_liked(self, obj: Comment):
         request = self.context.get('request')
@@ -27,4 +29,4 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'profile', 'post', 'body', 'created',
-                  'updated', 'parent', 'like_count', 'is_liked')
+                  'updated', 'parent', 'like_count', 'is_liked', 'url')

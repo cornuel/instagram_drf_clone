@@ -20,42 +20,64 @@ class CommentViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
 
     permission_classes = {
-        'retrieve': [IsAuthenticated],
-        'create': [IsAuthenticated],
-        'update': [IsAccountOwnerOrAdmin],
-        'partial_update': [IsAccountOwnerOrAdmin],
-        'destroy': [IsAccountOwnerOrAdmin],
+        'list': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'retrieve': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'create': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'update': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to update this comment."
+        },
+        'partial_update': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to partially update this comment."
+        },
+        'destroy': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to delete this comment."
+        }
     }
 
     def get_permissions(self):
         """
-        Returns the list of permission instances that the current user has for the given action.
-
-        :return: A list of permission instances.
-        :rtype: list
+        Instantiates and returns the list of permissions that this view requires.
         """
-        permissions = self.permission_classes.get(self.action, [])
+        action = self.action
+        permissions = self.permission_classes.get(
+            action, {}).get('classes', [])
         return [permission() for permission in permissions]
 
     def permission_denied(self, request, message=None, code=None):
         action = self.action  # Get the current action name
-        if action == 'destroy':
-            error_message = "You are not allowed to delete this comment."
-        elif action == 'update':
-            error_message = "You are not allowed to update this comment."
-        elif action == 'partial_update':
-            error_message = "You are not allowed to update this comment."
-        else:
-            error_message = "Permission denied."
-
+        error_message = self.permission_classes.get(
+            action, {}).get('error_message', 'Permission denied.')
         raise PermissionDenied(error_message)
 
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('id')
+        return queryset
+
     def get_serializer_class(self):
-        return super().get_serializer_class()
+        return CommentSerializer
 
     def perform_create(self, serializer):
         profile = self.request.user.profile
         serializer.save(profile=profile)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request, post_id=None):
         queryset = self.queryset.filter(post__id=post_id)

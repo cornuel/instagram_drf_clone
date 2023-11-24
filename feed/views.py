@@ -17,6 +17,6 @@ class FeedView(generics.ListAPIView):
 
         # Retrieve all the posts from the followed profiles
         posts: List[Post] = Post.objects.filter(
-            profile__in=followed_profiles).order_by('-created')
+            profile__in=followed_profiles, is_private=False).order_by('-created')
 
         return posts

@@ -194,3 +194,26 @@ override `create` method to check if the `slug` already exists
 
 # Commit 18
 ## Added Feed app
+
+# Commit 19
+## Profiles / Users
+### Models
+- Added slug field `username` on Profiles that will receive username from Users at the creation -> insted of using `user_username`
+### Views
+- Refactored `permissions_classes` to have actions mapped to dict with `classes` and `error_message` to better serve `get_permissions()` and `permission_denied()`
+### Serializers
+- Added url field as data and in header at the creation of a User
+
+## Posts
+### Models
+- Added `is_private` field -> users shall only see posts that has `is_private` equal to `False` except if the user is the owner
+### Views
+- Refactored `permissions_classes` to have actions mapped to dict with `classes` and `error_message` to better serve `get_permissions()` and `permission_denied()`
+### Serializers
+- Added url field as data and in header at the creation of a Post
+
+## Comments
+### Views
+- Refactored `permissions_classes` to have actions mapped to dict with `classes` and `error_message` to better serve `get_permissions()` and `permission_denied()`
+### Serializers
+- Added url field as data and in header at the creation of a Comment

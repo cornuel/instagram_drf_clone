@@ -1,9 +1,10 @@
 from django.shortcuts import render
+from django.db.models import Q
 from django.db import IntegrityError
 from django.utils.text import slugify
 from rest_framework import viewsets
 from rest_framework.exceptions import NotFound
-from .serializers import PostsListSerializer, PostDetailSerializer
+from .serializers import PostsListSerializer, PostDetailSerializer, PersonalPostListSerializer, PersonalPostDetailSerializer
 from .models import Post
 from profiles.models import Profile
 from tags.models import Tag
@@ -25,28 +26,52 @@ class PostViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
     permission_classes = {
-        'list': [IsAuthenticated],
-        'create': [IsAuthenticated],
-        'update': [IsAccountOwnerOrAdmin],
-        'partial_update': [IsAccountOwnerOrAdmin],
-        'destroy': [IsAccountOwnerOrAdmin],
-        'feature': [IsAccountOwnerOrAdmin],
-        'favorite': [IsAuthenticated],
-        'reset_upvote_count': [IsAdminUser],
-        'delete_all_posts': [IsAccountOwnerOrAdmin],
+        'list': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'create': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'update': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to update this post."
+        },
+        'partial_update': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to partially update this post."
+        },
+        'destroy': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to delete this post."
+        },
+        'feature': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to feature this post."
+        },
+        'favorite': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'reset_upvote_count': {
+            'classes': [IsAdminUser],
+            'error_message': "You are not allowed."
+        },
+        'delete_all_posts': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to delete all posts."
+        },
+        'publish': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to publish this post."
+        }
     }
 
     def permission_denied(self, request, message=None, code=None):
         action = self.action  # Get the current action name
-        if action == 'destroy':
-            error_message = "You are not allowed to delete this post."
-        elif action == 'update':
-            error_message = "You are not allowed to update this post."
-        elif action == 'partial_update':
-            error_message = "You are not allowed to update this post."
-        else:
-            error_message = "Permission denied."
-
+        error_message = self.permission_classes.get(
+            action, {}).get('error_message', 'Permission denied.')
         raise PermissionDenied(error_message)
 
     def get_serializer_class(self):
@@ -57,17 +82,27 @@ class PostViewSet(viewsets.ModelViewSet):
         :return: The serializer class based on the current action.
         """
         if self.action == 'list':
-            return PostsListSerializer
-        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy', 'feature', 'like']:
-            return PostDetailSerializer
+            return PersonalPostListSerializer
+        if self.action in ['create', 'publish']:
+            return PersonalPostDetailSerializer
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy', 'feature', 'like']:
+            # Check if the authenticated user is the owner of the post
+            if self.get_object().profile.user == self.request.user:
+                return PersonalPostDetailSerializer
+            else:
+                return PostDetailSerializer
         if self.action == 'tags':
             return TagSerializer
         return super().get_serializer_class()
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().order_by('id')
         # Filter the queryset to only include posts by the requesting profile
-        queryset = queryset.filter(profile=self.request.user.profile)
+        if self.action == 'list':
+            queryset = queryset.filter(profile=self.request.user.profile)
+        elif self.action == 'retrieve':
+            queryset = queryset.filter(
+                Q(is_private=False) | Q(profile=self.request.user.profile))
         return queryset
 
     def get_permissions(self):
@@ -75,14 +110,22 @@ class PostViewSet(viewsets.ModelViewSet):
         Returns the list of permission instances that the current user has for the given action.
 
         :return: A list of permission instances.
-        :rtype: list
+        :rtype: list 
         """
-        permissions = self.permission_classes.get(self.action, [])
+        permissions = self.permission_classes.get(
+            self.action, {}).get('classes', [])
         return [permission() for permission in permissions]
 
     def perform_create(self, serializer):
         profile = self.request.user.profile
         serializer.save(profile=profile)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -120,7 +163,6 @@ class PostViewSet(viewsets.ModelViewSet):
         # Retrieve the post instance
         instance = self.get_object()
 
-        request.data['post'] = instance.post
         # Update the fields specified in the request data
         serializer = self.get_serializer(instance,
                                          data=request.data, partial=True)
@@ -236,6 +278,24 @@ class PostViewSet(viewsets.ModelViewSet):
         post.save()
         serializer = self.get_serializer(post)
 
+        return Response({
+            'message': message,
+            'status': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+
+    @action(detail=True, methods=['post'])
+    def publish(self, request, slug: str = None):
+        post: Post = self.get_object()
+
+        if post.is_private:
+            post.is_private = False
+            message = 'Post published successfully'
+        else:
+            post.is_private = True
+            message = 'Post unpublished successfully'
+        post.save()
+        serializer = self.get_serializer(post)
         return Response({
             'message': message,
             'status': status.HTTP_200_OK,

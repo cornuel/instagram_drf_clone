@@ -19,10 +19,12 @@ class Post(models.Model):
     likes = models.ManyToManyField(
         'profiles.Profile', blank=True, related_name='post_likes')
     view_count = models.IntegerField(null=True, blank=True)
-    is_featured = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, blank=True)
+    is_featured = models.BooleanField(default=False)
+    is_private = models.BooleanField(default=False)
 
     # slugify
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
