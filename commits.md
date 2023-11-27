@@ -217,3 +217,7 @@ override `create` method to check if the `slug` already exists
 - Refactored `permissions_classes` to have actions mapped to dict with `classes` and `error_message` to better serve `get_permissions()` and `permission_denied()`
 ### Serializers
 - Added url field as data and in header at the creation of a Comment
+
+# Commit 20
+## Added Search app
+- Allow to search through posts and profiles with the query params `query`, and `type` => `query` is the search query and `type` limits this research to posts, profiles or both 

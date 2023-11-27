@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'profiles',
     'tags',
     'feed',
+    'search',
     'django_extensions',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',

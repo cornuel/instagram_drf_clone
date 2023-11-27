@@ -7,6 +7,7 @@ from posts import views as posts_views
 from tags import views as tags_views
 from comments import views as comments_views
 import feed.urls as feed
+import search.urls as search
 
 router = routers.DefaultRouter()
 router.register(r'users',
@@ -32,5 +33,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/', include(router.urls)),
     path('api/feed/', include(feed)),
+    path('api/search/', include(search)),
     path('api/token/', include('auth.urls')),
 ]

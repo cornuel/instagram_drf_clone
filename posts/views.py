@@ -317,26 +317,3 @@ class PostViewSet(viewsets.ModelViewSet):
         subcomments = comment.replies.all()
         serializer = self.get_serializer(subcomments, many=True)
         return self.get_paginated_response(self.paginate_queryset(serializer.data))
-
-# class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
-#     lookup_field = 'user'
-
-#     def get_serializer_class(self):
-#         if self.action == 'list':
-#             return PostsListSerializer
-#         if self.action == 'retrieve':
-#             return PostDetailSerializer
-#         return super().get_serializer_class()
-
-#     def get_queryset(self):
-#         username = self.kwargs.get('username')
-#         print(username)
-
-#         # Check if the user with the provided username exists
-#         try:
-#             user = User.objects.get(user__username=username)
-#         except User.DoesNotExist:
-#             raise NotFound(f"User with username '{username}' does not exist.")
-
-#         # If the user exists, filter posts by that user
-#         return Post.objects.filter(user=user)
