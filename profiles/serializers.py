@@ -16,12 +16,16 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
 class PublicProfileSerializer(serializers.ModelSerializer):
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
+    posts_count = serializers.SerializerMethodField()
 
     def get_following_count(self, obj: Profile):
         return obj.follows.count()
 
     def get_followers_count(self, obj: Profile):
         return obj.followed_by.count()
+    
+    def get_posts_count(self, obj: Profile):
+        return obj.posts.filter(is_private=False).count()
 
     class Meta:
         model = Profile
@@ -31,6 +35,7 @@ class PublicProfileSerializer(serializers.ModelSerializer):
             'full_name',
             'bio',
             'profile_pic',
+            'posts_count',
             'following_count',
             'followers_count',
         )
@@ -57,12 +62,16 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     )
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
+    posts_count = serializers.SerializerMethodField()
 
     def get_following_count(self, obj: Profile):
         return obj.follows.count()
 
     def get_followers_count(self, obj: Profile):
         return obj.followed_by.count()
+    
+    def get_posts_count(self, obj: Profile):
+        return obj.posts.filter(is_private=False).count()
 
     class Meta:
         model = Profile
@@ -72,6 +81,7 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
             'full_name',
             'bio',
             'profile_pic',
+            'posts_count',
             'favorite_posts',
             'following_count',
             'followers_count',
