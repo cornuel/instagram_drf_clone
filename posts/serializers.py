@@ -1,5 +1,6 @@
+from django.forms import ValidationError
 from rest_framework import serializers
-from .models import Post
+from .models import Post, PostImage
 from tags.models import Tag
 from profiles.models import Profile
 from django.contrib.auth.models import User
@@ -7,6 +8,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from django.utils.text import slugify
 from django.db.models import F
 from profiles.serializers import PublicProfileSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 class TagListField(serializers.ListField):
@@ -34,11 +36,17 @@ class TagListField(serializers.ListField):
         return [self.child.to_representation(item) if item is not None else None for item in data.all()]
 
 
+class PostImageSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    class Meta:
+        model = PostImage
+        fields = ['id', 'image']
+
 class PostsListSerializer(serializers.ModelSerializer):
-    # profile = PublicProfileSerializer()
     profile = serializers.StringRelatedField(read_only=True)
     tags = TagListField(child=serializers.CharField(), required=False)
     like_count = serializers.SerializerMethodField()
+    images = PostImageSerializer(many=True, read_only=True)
     comment_count = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
         many=False, view_name='posts-detail', lookup_field='slug')
@@ -55,7 +63,7 @@ class PostsListSerializer(serializers.ModelSerializer):
             'id',
             'profile',
             'title',
-            'image',
+            'images',
             'slug',
             'tags',
             'like_count',
@@ -71,6 +79,7 @@ class PersonalPostListSerializer(PostsListSerializer):
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
+    # likes = PublicProfileSerializer(many=True, read_only=True)
     tags = TagListField(child=serializers.CharField(), required=False)
     profile = serializers.StringRelatedField(read_only=True)
     like_count = serializers.SerializerMethodField()
@@ -79,6 +88,11 @@ class PostDetailSerializer(serializers.ModelSerializer):
     comment_count = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
         many=False, view_name='posts-detail', lookup_field='slug')
+    images = PostImageSerializer(many=True, read_only=True)
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(allow_empty_file=False, use_url=False),
+        write_only=True
+    )
 
     def get_is_liked(self, obj: Post):
         request = self.context.get('request')
@@ -104,12 +118,14 @@ class PostDetailSerializer(serializers.ModelSerializer):
             'id',
             'profile',
             'title',
-            'image',
+            'images',
+            'uploaded_images',
             'body',
             'slug',
             'tags',
             'created',
             'updated',
+            # 'likes',
             'is_liked',
             'is_favorited',
             'like_count',
@@ -119,8 +135,19 @@ class PostDetailSerializer(serializers.ModelSerializer):
             'url'
         )
         lookup_field = 'slug'
+        
+    def validate(self, data):
+        # Check if we're updating an existing post
+        instance = getattr(self, 'instance', None)
+        if instance:
+            # Count the current number of images plus any new ones
+            total_images = instance.images.count() + len(data.get('uploaded_images', []))
+            if total_images >  10:
+                raise ValidationError("A post cannot have more than 10 images.")
+        return data
 
     def create(self, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', None)
         tags = validated_data.pop('tags', [])
 
         # Create brand new slug for the post
@@ -132,6 +159,10 @@ class PostDetailSerializer(serializers.ModelSerializer):
             validated_data['slug'] = f"{slug}-{i}"
 
         post = Post.objects.create(**validated_data)
+        
+        if uploaded_images:
+            for image_data in uploaded_images:
+                PostImage.objects.create(post=post, image=image_data)
 
         # Create tags that do not exist
         for tag in tags:
@@ -142,8 +173,11 @@ class PostDetailSerializer(serializers.ModelSerializer):
         post.save()
 
         return post
+    
 
     def update(self, instance, validated_data):
+        print("update called")
+        uploaded_images = validated_data.pop('uploaded_images', None)
         # Get the new set of tags
         new_tags = set(validated_data.pop('tags', []))
 
@@ -175,8 +209,13 @@ class PostDetailSerializer(serializers.ModelSerializer):
         instance.tags.add(*new_tags)
 
         Tag.objects.filter(post_count=0).delete()
+        
+        if uploaded_images:
+            for image_data in uploaded_images:
+                PostImage.objects.create(post=instance, image=image_data)
 
         return instance
+    
 
     def delete(self, instance):
         # Get the tags associated with the instance

@@ -1,16 +1,15 @@
 import uuid
 import os
 
-
 def upload_to(instance, filename):
     # Generate a UUID for the filename
     uuid_filename = f"{uuid.uuid4().hex}{uuid.uuid4().hex}{uuid.uuid4().hex}"
     # Get the profile user's username
-    if hasattr(instance, 'profile'):
-        profile = instance.profile
+    if hasattr(instance, 'post'):
+        profile = instance.post.profile
+        username = profile.username
     else:
-        profile = instance
-    username = profile.pk
+        username = instance.username
     # Get the original file extension
     extension = os.path.splitext(filename)[1]
     # Construct the subfolder path

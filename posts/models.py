@@ -3,15 +3,17 @@ from django.contrib.auth.models import User
 from tags.models import Tag
 from django.utils.text import slugify
 from django.dispatch import receiver
-from django.db.models.signals import post_delete
+from django.db.models.signals import pre_delete
 from app.utils import upload_to
 
+class PostImage(models.Model):
+    post = models.ForeignKey('posts.Post', on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to=upload_to)
 
 class Post(models.Model):
     profile = models.ForeignKey(
         'profiles.Profile', on_delete=models.CASCADE, related_name='posts')
     title = models.CharField(max_length=100)
-    image = models.ImageField(upload_to=upload_to)
     body = models.TextField()
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -34,6 +36,7 @@ class Post(models.Model):
         return self.title
 
 
-@receiver(post_delete, sender=Post)
+@receiver(pre_delete, sender=Post)
 def delete_image_file(sender, instance, **kwargs):
-    instance.image.delete(False)
+    for post_image in instance.images.all():
+        post_image.image.delete(save=False)

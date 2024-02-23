@@ -127,7 +127,7 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
             Response: The serialized data of the retrieved posts.
         """
         profile: Profile = self.get_object()
-        posts: Post = profile.posts.filter(is_private=False)
+        posts: Post = profile.posts.filter(is_private=False).order_by('-created')
         serializer = self.get_serializer(posts, many=True)
         return self.get_paginated_response(self.paginate_queryset(serializer.data))
 

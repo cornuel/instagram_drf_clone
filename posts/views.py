@@ -9,6 +9,7 @@ from .models import Post
 from profiles.models import Profile
 from tags.models import Tag
 from tags.serializers import TagSerializer
+from profiles.serializers import PublicProfileSerializer
 from comments.models import Comment
 from comments.serializers import CommentSerializer
 from app.permissions import IsAccountOwnerOrAdmin
@@ -17,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser
 from typing import List
 from rich import print as rprint
 
@@ -24,6 +26,7 @@ from rich import print as rprint
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     lookup_field = 'slug'
+    parser_classes = [MultiPartParser, FormParser]
 
     permission_classes = {
         'list': {
@@ -283,6 +286,13 @@ class PostViewSet(viewsets.ModelViewSet):
             'status': status.HTTP_200_OK,
             'data': serializer.data
         })
+        
+    @action(detail=True, methods=['get'], serializer_class=PublicProfileSerializer)
+    def likes(self, request, slug: str = None):
+        post: Post = self.get_object()
+        likes = post.likes.all()
+        serializer = self.get_serializer(likes, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
 
     @action(detail=True, methods=['post'])
     def publish(self, request, slug: str = None):
