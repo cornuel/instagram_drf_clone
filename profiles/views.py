@@ -39,6 +39,10 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
             'classes': [IsAccountOwnerOrAdmin],
             'error_message': "You are not allowed to delete this profile."
         },
+        'isFollowing': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
         'following': {
             'classes': [IsAuthenticated],
             'error_message': "You are not authenticated."
@@ -83,7 +87,7 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
 
         if self.action == 'list':
             return ProfileListSerializer
-        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy', 'following', 'followers']:
+        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy', 'following', 'followers', 'isFollowing']:
             return PublicProfileSerializer
         if self.action == 'posts':
             return PostsListSerializer
@@ -187,3 +191,20 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         followers: List[Profile] = profile.followed_by.all()
         serializer = self.get_serializer(followers, many=True)
         return self.get_paginated_response(self.paginate_queryset(serializer.data))
+    
+    @action(detail=True, methods=['get'])
+    def isFollowing(self, request, username: str = None) -> Response:
+        """
+        Check if the authenticated user is following the specified profile.
+        Args:
+            request (Request): The HTTP request object.
+            username (str, optional): The username of the profile. Defaults to None.
+        Returns:
+            Response: The serialized data indicating if the user is following the profile.
+        """
+
+        profile: Profile = self.get_object()
+        user = request.user
+
+        is_following = profile.followed_by.filter(id=user.id).exists()
+        return Response({'is_following': is_following})
