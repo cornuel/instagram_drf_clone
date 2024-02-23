@@ -13,6 +13,7 @@ class CommentSerializer(serializers.ModelSerializer):
     # replies = RepliesSerializer(many=True)
     profile = serializers.StringRelatedField(read_only=True)
     like_count = serializers.SerializerMethodField()
+    replies_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
         many=False, view_name='comments-detail', lookup_field='id')
@@ -25,8 +26,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_like_count(self, obj: Comment):
         return obj.likes.count()
+    
+    def get_replies_count(self, obj: Comment):
+        return obj.replies.count()
 
     class Meta:
         model = Comment
         fields = ('id', 'profile', 'post', 'body', 'created',
-                  'updated', 'parent', 'like_count', 'is_liked', 'url')
+                  'updated', 'parent', 'like_count', 'replies_count', 'is_liked', 'url')
