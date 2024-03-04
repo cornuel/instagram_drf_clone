@@ -14,9 +14,16 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
 
 
 class PublicProfileSerializer(serializers.ModelSerializer):
+    is_following = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     posts_count = serializers.SerializerMethodField()
+    
+    def get_is_following(self, obj: Profile):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.followed_by.filter(id=request.user.profile.id).exists()
+        return False
 
     def get_following_count(self, obj: Profile):
         return obj.follows.count()
@@ -36,6 +43,7 @@ class PublicProfileSerializer(serializers.ModelSerializer):
             'bio',
             'profile_pic',
             'posts_count',
+            'is_following',
             'following_count',
             'followers_count',
         )
@@ -60,6 +68,7 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
         slug_field='slug',
         read_only=True
     )
+    
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     posts_count = serializers.SerializerMethodField()
