@@ -62,7 +62,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         raise PermissionDenied(error_message)
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('id')
+        queryset = super().get_queryset()
         return queryset
 
     def get_serializer_class(self):
