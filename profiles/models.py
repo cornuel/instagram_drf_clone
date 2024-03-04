@@ -2,8 +2,19 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db import models
 from core.models import TimestampedModel
-from app.utils import upload_to
+import os
 
+def upload_to(instance, filename, suffix=""):
+    uuid_filename = f"{instance.uuid.hex}"
+    return f"{generate_subfolder(instance)}/{uuid_filename}{suffix}{os.path.splitext(filename)[1]}"
+
+def generate_subfolder(instance):
+    if hasattr(instance, 'post'):
+        profile = instance.post.profile
+        username = profile.username
+    else:
+        username = instance.username
+    return f"{username}"
 
 class Profile(TimestampedModel):
     user = models.OneToOneField(
