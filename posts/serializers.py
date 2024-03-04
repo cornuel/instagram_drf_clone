@@ -40,7 +40,7 @@ class PostImageSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     class Meta:
         model = PostImage
-        fields = ['id', 'image']
+        fields = ['id', 'image', 'thumbnail']
 
 class PostsListSerializer(serializers.ModelSerializer):
     profile = serializers.StringRelatedField(read_only=True)

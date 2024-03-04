@@ -1,5 +1,11 @@
+import os
+import tempfile
+import zipfile
+
+import requests
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import render
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db import IntegrityError
 from django.utils.text import slugify
 from rest_framework import viewsets
@@ -311,12 +317,49 @@ class PostViewSet(viewsets.ModelViewSet):
             'status': status.HTTP_200_OK,
             'data': serializer.data
         })
+        
+    @action(detail=True, methods=['get'])
+    def download(self, request, slug: str = None):
+        post: Post = self.get_object()
+        # if post.images.count() == 1:
+        #     ## problem -- the request takes forever then the image is corrupted, but the lengh is good
+        #     image = post.images.first()
+        #     image_url = image.image.url
+        #     response = requests.get(image_url)
+        #     response = FileResponse(
+        #         response.content,
+        #         as_attachment=True)
+        #     response['Content-Type'] = 'image/png'
+        #     response['Content-Disposition'] = f'attachment; filename="{post.slug}.{image.image.name.split(".")[-1]}"'
+        #     return response
+        # else:
+        zip_filename = f'{post.slug}.zip'
+        zip_file = tempfile.NamedTemporaryFile(prefix=zip_filename, suffix='.zip', delete=False)
+        try:
+            with zipfile.ZipFile(zip_file.name, 'w') as zip_file_contents:
+                for i, image in enumerate(post.images.all(), start=1):
+                    image_filename = f'{post.slug}-{i}.{image.image.name.split(".")[-1]}'
+                    image_url = image.image.url
+                    response = requests.get(image_url)
+                    zip_file_contents.writestr(image_filename, response.content)
+                    
+            zip_file.seek(0)
+            response = FileResponse(zip_file)
+            response['Content-Type'] = 'application/zip'
+            response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+            
+            return response
+        except Exception as e:
+            return Response("An error occurred while downloading the images.", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        
+        
 
     @action(detail=True, methods=['get'], serializer_class=CommentSerializer)
     def comments(self, request, slug: str = None):
         if self.request.method == 'GET':
             post: Post = self.get_object()
-            comments = post.comments.filter(parent=None)
+            comments = post.comments.filter(parent=None).annotate(like_count=Count('likes')).order_by('-like_count', '-created')
             serializer = self.get_serializer(comments, many=True)
             return self.get_paginated_response(self.paginate_queryset(serializer.data))
 
