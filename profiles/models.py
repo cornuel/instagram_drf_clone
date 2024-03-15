@@ -5,8 +5,7 @@ from core.models import TimestampedModel
 import os
 
 def upload_to(instance, filename, suffix=""):
-    uuid_filename = f"{instance.uuid.hex}"
-    return f"{generate_subfolder(instance)}/{uuid_filename}{suffix}{os.path.splitext(filename)[1]}"
+    return f"{generate_subfolder(instance)}/{instance.username}_pp{os.path.splitext(filename)[1]}"
 
 def generate_subfolder(instance):
     if hasattr(instance, 'post'):
@@ -27,6 +26,10 @@ class Profile(TimestampedModel):
         'self', symmetrical=False, related_name='followed_by')
     favorite_posts = models.ManyToManyField(
         'posts.Post', blank=True, related_name='favorited_by')
+    # saved_posts = models.ManyToManyField(
+    #     'posts.Post', blank=True, related_name='saved_by')
+
+
 
     def __str__(self):
         return self.user.username
