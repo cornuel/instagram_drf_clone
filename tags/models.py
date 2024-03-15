@@ -12,5 +12,5 @@ class Tag(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
-        self.name = self.name.title()
+        self.name = self.name
         return super().save(*args, **kwargs)

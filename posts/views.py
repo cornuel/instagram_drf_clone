@@ -74,6 +74,10 @@ class PostViewSet(viewsets.ModelViewSet):
         'publish': {
             'classes': [IsAccountOwnerOrAdmin],
             'error_message': "You are not allowed to publish this post."
+        },
+        'favorited': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
         }
     }
 
@@ -90,7 +94,7 @@ class PostViewSet(viewsets.ModelViewSet):
         :param self: The instance of the class.
         :return: The serializer class based on the current action.
         """
-        if self.action == 'list':
+        if self.action in ['list', 'favorited']:
             return PersonalPostListSerializer
         if self.action in ['create', 'publish']:
             return PersonalPostDetailSerializer
@@ -153,6 +157,8 @@ class PostViewSet(viewsets.ModelViewSet):
         """
 
         instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        serializer.delete(instance)
         try:
             self.perform_destroy(instance)
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -179,7 +185,15 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data)
-
+    
+    @action(detail=False, methods=['get'])
+    def favorited(self, request):
+        queryset = self.get_queryset().filter(is_private=False).filter(
+            favorited_by__id=request.user.profile.id)
+        serializer = self.get_serializer(queryset, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
+    
+    
     @action(detail=False, methods=['delete'])
     def delete_all_posts(self, request):
         # Delete all the posts of the requesting user

@@ -28,7 +28,7 @@ class TagListField(serializers.ListField):
             try:
                 tag = Tag.objects.get(slug=slugify(tag_name))
             except Tag.DoesNotExist:
-                tag = Tag.objects.create(name=tag_name.title())
+                tag = Tag.objects.create(name=tag_name)
             tags.add(tag)
         return tags
 
@@ -221,16 +221,15 @@ class PostDetailSerializer(serializers.ModelSerializer):
         # Get the tags associated with the instance
         tags = instance.tags.all()
 
-        # Decrement the post_count for each tag
-        Tag.objects.filter(id__in=tags).update(
-            post_count=F('post_count') - 1
-        )
+        
+        if tags:
+            # Decrement the post_count for each tag
+            Tag.objects.filter(id__in=[tag.id for tag in tags]).update(
+                post_count=F('post_count') - 1
+            )
+            # Delete tags with post_count of 0
+            Tag.objects.filter(post_count=0).delete()
 
-        # Delete tags with post_count of 0
-        Tag.objects.filter(post_count=0).delete()
-
-        # Delete the instance
-        instance.delete()
 
 
 class PersonalPostDetailSerializer(PostDetailSerializer):
