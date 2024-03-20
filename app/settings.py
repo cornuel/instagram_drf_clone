@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
+import json
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -192,15 +193,20 @@ WSGI_APPLICATION = 'app.wsgi.application'
 #     }
 # }
 
+if config('ENVIRONMENT') == 'dev' :
+    DB = "DATABASE_NEON"
+else:
+    DB = "DATABASE_PYANYWHERE"
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config("DATABASE_NEON_NAME"),
-        'USER': config("DATABASE_NEON_USER"),
-        'PASSWORD': config("DATABASE_NEON_PASSWORD"),
-        'HOST': config('DATABASE_NEON_HOST'),
-        'PORT': '5432',
-        'OPTIONS': {'sslmode': 'require'},
+        'ENGINE': config(DB + "_ENGINE"),
+        'NAME': config(DB + "_NAME"),
+        'USER': config(DB + "_USER"),
+        'PASSWORD': config(DB + "_PASSWORD"),
+        'HOST': config(DB + "_HOST"),
+        'PORT': config(DB + "_PORT"),
+        'OPTIONS': json.loads(config(DB + "_OPTIONS", default='{}')),
     }
 }
 
