@@ -36,7 +36,10 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+if config('ENVIRONMENT') == 'dev' :
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")])
 
 LOGGING = {
     'version': 1,
@@ -195,8 +198,10 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 if config('ENVIRONMENT') == 'dev' :
     DB = "DATABASE_NEON"
+    DB_OPTIONS = {"sslmode": "require"}
 else:
     DB = "DATABASE_PYANYWHERE"
+    DB_OPTIONS = {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'",}
 
 DATABASES = {
     'default': {
@@ -206,7 +211,7 @@ DATABASES = {
         'PASSWORD': config(DB + "_PASSWORD"),
         'HOST': config(DB + "_HOST"),
         'PORT': config(DB + "_PORT"),
-        'OPTIONS': json.loads(config(DB + "_OPTIONS", default='{}')),
+        'OPTIONS': DB_OPTIONS
     }
 }
 
