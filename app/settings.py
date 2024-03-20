@@ -39,7 +39,7 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 if config('ENVIRONMENT') == 'dev' :
     ALLOWED_HOSTS = ['*']
 else:
-    ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")])
+    ALLOWED_HOSTS = config("DEPLOYED_FRONTEND_HOST")
 
 LOGGING = {
     'version': 1,
