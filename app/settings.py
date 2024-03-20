@@ -39,7 +39,7 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 if config('ENVIRONMENT') == 'dev' :
     ALLOWED_HOSTS = ['*']
 else:
-    ALLOWED_HOSTS = config("DEPLOYED_FRONTEND_HOST")
+    ALLOWED_HOSTS = [config("DEPLOYED_FRONTEND_HOST")]
 
 LOGGING = {
     'version': 1,
@@ -129,8 +129,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
-
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    config('DEPLOYED_FRONTEND_HOST')
+]
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
