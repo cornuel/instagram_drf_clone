@@ -51,6 +51,10 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
             'classes': [IsAuthenticated],
             'error_message': "You are not authenticated."
         },
+        'delete_profile_pic': {
+            'classes': [IsAccountOwnerOrAdmin],
+            'error_message': "You are not allowed to update this profile."
+        },
         'posts': {
             'classes': [IsAuthenticated],
             'error_message': "You are not authenticated."
@@ -81,7 +85,7 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         """
         user: User = self.request.user
         # Check if the authenticated user is the owner of the profile, if so, return ProfileDetailSerializer
-        if self.action == 'retrieve':
+        if self.action in ['retrieve', 'delete_profile_pic']:
             if self.get_object().user == user:
                 return ProfileDetailSerializer
 
@@ -118,6 +122,25 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
             instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['delete'])
+    def delete_profile_pic(self, request, username: str = None) -> Response:
+        """
+        Delete the profile picture of the authenticated user.
+        Args:
+            request (HttpRequest): The HTTP request object.
+        Returns:
+            Response: The updated serialized data of the profile without the profile picture.
+        Raises:
+            PermissionDenied: If the authenticated user is not the owner of the profile.
+        """
+        profile: Profile = self.get_object()
+        if profile.user != request.user:
+            self.permission_denied(request)
+        profile.profile_pic.delete()
+        profile.save()
+        serializer = self.get_serializer(profile)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
