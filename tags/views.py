@@ -31,7 +31,7 @@ class TagViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
     
-    @action(detail=False, methods=['delete'])
-    def delete_all(self, request):
-        Tag.objects.all().delete()
-        return Response("All tags have been deleted.", status=status.HTTP_204_NO_CONTENT)
+    # @action(detail=False, methods=['delete'])
+    # def delete_all(self, request):
+    #     Tag.objects.all().delete()
+    #     return Response("All tags have been deleted.", status=status.HTTP_204_NO_CONTENT)
