@@ -22,6 +22,9 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Validate whether the password is strong enough.
         """
+        if len(value) < 8:
+            raise serializers.ValidationError(
+                "Password must be at least 8 characters long.")
         if not re.search(r'[A-Z]', value):
             raise serializers.ValidationError(
                 "Password must contain at least one uppercase letter.")
@@ -34,4 +37,23 @@ class UserSerializer(serializers.ModelSerializer):
         if not re.search(r'\W', value):
             raise serializers.ValidationError(
                 "Password must contain at least one special character.")
+        return value
+
+
+    def validate_username(self, value):
+        """
+        Validate whether the username is at least 3 characters long.
+        """
+        if len(value) < 3:
+            raise serializers.ValidationError(
+                "Username must be at least 3 characters long.")
+        return value
+
+    def validate_email(self, value):
+        """
+        Validate whether the email is valid.
+        """
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+            raise serializers.ValidationError(
+                "Invalid email address.")
         return value
