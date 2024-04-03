@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
+
+from profiles.serializers import PublicProfileSerializer
 from .serializers import CommentSerializer
 from .models import Comment
 from profiles.models import Profile
@@ -43,7 +45,15 @@ class CommentViewSet(viewsets.ModelViewSet):
         'destroy': {
             'classes': [IsAccountOwnerOrAdmin],
             'error_message': "You are not allowed to delete this comment."
-        }
+        },
+        'like': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'likes': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
     }
 
     def get_permissions(self):
@@ -66,7 +76,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        return CommentSerializer
+        if self.action == 'likes':
+            return PublicProfileSerializer
+        else:
+            return CommentSerializer
 
     def perform_create(self, serializer):
         profile = self.request.user.profile
@@ -145,3 +158,10 @@ class CommentViewSet(viewsets.ModelViewSet):
             'status': status.HTTP_200_OK,
             'data': serializer.data
         })
+        
+    @action(detail=True, methods=['get'])
+    def likes(self, request, id: int = None):
+        comment: Comment = self.get_object()
+        likes = comment.likes.all()
+        serializer = self.get_serializer(likes, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))

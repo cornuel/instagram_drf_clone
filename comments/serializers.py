@@ -10,8 +10,8 @@ class RepliesSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    # replies = RepliesSerializer(many=True)
     profile = serializers.StringRelatedField(read_only=True)
+    post = serializers.SlugRelatedField(slug_field='slug', read_only=True)
     like_count = serializers.SerializerMethodField()
     replies_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
@@ -32,5 +32,16 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'profile', 'post', 'body', 'created',
-                  'updated', 'parent', 'like_count', 'replies_count', 'is_liked', 'url')
+        fields = (
+            'id', 
+            'profile', 
+            'post', 
+            'body', 
+            'parent', 
+            'like_count', 
+            'replies_count', 
+            'is_liked', 
+            'created', 
+            'updated',
+            'url'
+        )
