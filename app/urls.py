@@ -10,6 +10,7 @@ from tags import views as tags_views
 from comments import views as comments_views
 import feed.urls as feed
 import search.urls as search
+from decouple import config
 
 router = routers.DefaultRouter()
 router.register(r'users',
@@ -39,5 +40,5 @@ urlpatterns = [
     path('api/token/', include('auth.urls')),
 ]
 
-if settings.ENVIRONMENT == 'dev':
+if config("ENVIRONMENT") == 'dev':
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
