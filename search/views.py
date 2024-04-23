@@ -7,11 +7,13 @@ from posts.models import Post
 from profiles.models import Profile
 from posts.serializers import PostsListSerializer
 from profiles.serializers import PublicProfileSerializer
+from rest_framework.permissions import IsAuthenticated
 
 
 class SearchView(generics.ListAPIView):
     pagination_class = PageNumberPagination
-
+    permission_classes = [IsAuthenticated]
+    
     def list(self, request, *args, **kwargs):
         search_query = self.request.query_params.get('query', '')
         search_type = self.request.query_params.get(
@@ -40,7 +42,7 @@ class SearchView(generics.ListAPIView):
         elif search_type == 'tag':
             # Query for matching posts
             posts = Post.objects.filter(
-                Q(tags__name__icontains=search_query),
+                Q(tags__name__iexact=search_query),
                 is_private=False
             ).distinct().order_by('-created')
 

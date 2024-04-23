@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import AccessToken
 from django.utils.text import slugify
 from django.db.models import F
+from django.db import transaction
 from profiles.serializers import PublicProfileSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -150,27 +151,30 @@ class PostDetailSerializer(serializers.ModelSerializer):
         uploaded_images = validated_data.pop('uploaded_images', None)
         tags = validated_data.pop('tags', [])
 
-        # Create brand new slug for the post
-        slug = slugify(validated_data['title'])
-        if slug and Post.objects.filter(slug=slug).exists():
-            i = 1
-            while Post.objects.filter(slug=f"{slug}-{i}").exists():
-                i += 1
-            validated_data['slug'] = f"{slug}-{i}"
-
-        post = Post.objects.create(**validated_data)
-        
-        if uploaded_images:
-            for image_data in uploaded_images:
-                PostImage.objects.create(post=post, image=image_data)
-
-        # Create tags that do not exist
-        for tag in tags:
-            post.tags.add(tag)
-            # Increment the post_count for the related tag
-            Tag.objects.filter(id=tag.id).update(
-                post_count=F('post_count') + 1)
-        post.save()
+        with transaction.atomic():
+            # Create brand new slug for the post
+            slug = slugify(validated_data['title'])
+            if slug and Post.objects.filter(slug=slug).exists():
+                i = 1
+                while Post.objects.filter(slug=f"{slug}-{i}").exists():
+                    i += 1
+                validated_data['slug'] = f"{slug}-{i}"
+            try:
+                post = Post.objects.create(**validated_data)
+                
+                if uploaded_images:
+                    for image_data in uploaded_images:
+                        PostImage.objects.create(post=post, image=image_data)
+                        
+                # Create tags that do not exist
+                for tag in tags:
+                    post.tags.add(tag)
+                    # Increment the post_count for the related tag
+                    Tag.objects.filter(id=tag.id).update(
+                        post_count=F('post_count') + 1)
+                    
+            except Exception as e:
+                raise e
 
         return post
     

@@ -32,7 +32,7 @@ class PostImage(models.Model):
         upload_to=upload_to_thumbnail,
         null=True, 
         blank=True, 
-        size=(1080, 1080)
+        size=(720, 720)
     )
 
 class Post(models.Model):
