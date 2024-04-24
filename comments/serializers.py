@@ -11,7 +11,6 @@ class RepliesSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     profile = serializers.StringRelatedField(read_only=True)
-    post = serializers.SlugRelatedField(slug_field='slug', read_only=True)
     like_count = serializers.SerializerMethodField()
     replies_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
