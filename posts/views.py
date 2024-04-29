@@ -2,38 +2,37 @@ import os
 import tempfile
 import zipfile
 
+from django.shortcuts import get_object_or_404
 import requests
-from django.http import FileResponse, HttpResponse
-from django.shortcuts import render
+from django.http import FileResponse
 from django.db.models import Q, Count
-from django.db import IntegrityError
-from django.utils.text import slugify
 from rest_framework import viewsets
-from rest_framework.exceptions import NotFound
-from .serializers import PostsListSerializer, PostDetailSerializer, PersonalPostListSerializer, PersonalPostDetailSerializer
+from .serializers import PostDetailSerializer, PersonalPostListSerializer, PersonalPostDetailSerializer, PostsListSerializer
 from .models import Post
 from profiles.models import Profile
 from tags.models import Tag
 from tags.serializers import TagSerializer
 from profiles.serializers import PublicProfileSerializer
-from comments.models import Comment
 from comments.serializers import CommentSerializer
 from app.permissions import IsAccountOwnerOrAdmin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from typing import List
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from rich import print as rprint
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
     lookup_field = 'slug'
+    serializer_class = PostsListSerializer
+    queryset = Post.objects.all()
     parser_classes = [MultiPartParser, FormParser]
-
+    
     permission_classes = {
         'list': {
             'classes': [IsAuthenticated],
@@ -86,37 +85,73 @@ class PostViewSet(viewsets.ModelViewSet):
         error_message = self.permission_classes.get(
             action, {}).get('error_message', 'Permission denied.')
         raise PermissionDenied(error_message)
+    
+    # def get_object(self):
+    #     """
+    #     Returns the object based on the current action.
 
-    def get_serializer_class(self):
+    #     :param self: The instance of the class.
+    #     :return: The object based on the current action.
+    #     """
+    #     if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
+    #         assert self.lookup_field in self.kwargs
+    #     return super().get_object()
+            
+
+    def get_serializer_class(self, *args, **kwargs):
         """
         Returns the serializer class based on the current action.
 
         :param self: The instance of the class.
         :return: The serializer class based on the current action.
         """
-        if self.action in ['list', 'favorited']:
-            return PersonalPostListSerializer
-        if self.action in ['create', 'publish']:
-            return PersonalPostDetailSerializer
-        if self.action in ['retrieve', 'update', 'partial_update', 'destroy', 'feature', 'like']:
-            # Check if the authenticated user is the owner of the post
-            if self.get_object().profile.user == self.request.user:
+        # # This is a workaround to provide a serializer to the schema generator
+        # # without needing a request or action.
+        # if 'swagger_fake_view' in kwargs:
+        #     return PersonalPostDetailSerializer(*args, **kwargs)
+    
+        if self.action:
+            if self.action in ['list', 'favorited']:
+                return PersonalPostListSerializer
+            if self.action in ['create', 'publish']:
                 return PersonalPostDetailSerializer
-            else:
-                return PostDetailSerializer
-        if self.action == 'tags':
-            return TagSerializer
+            if self.action in ['retrieve', 'update', 'partial_update', 'destroy', 'feature', 'like']:
+                # Check if the authenticated user is the owner of the post
+                if self.get_object().profile.user == self.request.user:
+                    return PersonalPostDetailSerializer
+                else:
+                    return PostDetailSerializer
+            if self.action == 'tags':
+                return TagSerializer
         return super().get_serializer_class()
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('id')
         # Filter the queryset to only include posts by the requesting profile
-        if self.action == 'list':
-            queryset = queryset.filter(profile=self.request.user.profile)
-        elif self.action == 'retrieve':
-            queryset = queryset.filter(
-                Q(is_private=False) | Q(profile=self.request.user.profile))
+        if self.request and self.request.user.is_authenticated and self.action:
+            if self.action == 'list':
+                queryset = queryset.filter(profile=self.request.user.profile)
+            elif self.action == 'retrieve':
+                queryset = queryset.filter(
+                    Q(is_private=False) | Q(profile=self.request.user.profile))
         return queryset
+    
+    # def get_object(self):
+    #     """
+    #     Returns the object the view is displaying.        
+    #     """
+    #     queryset = self.filter_queryset(self.get_queryset())
+
+    #     # Perform the lookup filtering.
+    #     lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+    #     filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+    #     obj = get_object_or_404(queryset, **filter_kwargs)
+
+    #     # May raise a permission denied
+    #     self.check_object_permissions(self.request, obj)
+
+    #     return obj
 
     def get_permissions(self):
         """
@@ -133,13 +168,69 @@ class PostViewSet(viewsets.ModelViewSet):
         profile = self.request.user.profile
         serializer.save(profile=profile)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='slug',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Slug of the post',
+                required=True,
+            )
+        ],
+        responses=PostDetailSerializer(many=False),
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='slug',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Slug of the post',
+                required=True,
+            )
+        ],
+        responses=PostDetailSerializer(many=False),
+    )
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieves an instance of the object.
 
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: The HTTP response object.
+
+        Raises:
+            Exception: If an error occurs while retrieving the object.
+        """
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='slug',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Slug of the post',
+                required=True,
+            )
+        ],
+        responses=PostDetailSerializer(many=False),
+    )
     def destroy(self, request, *args, **kwargs):
         """
         Deletes an instance of the object.
@@ -165,7 +256,52 @@ class PostViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response("An error occurred while deleting the object.", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='slug',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Slug of the post',
+                required=True,
+            )
+        ],
+        responses=PostDetailSerializer(many=False),
+    )
     def update(self, request, *args, **kwargs):
+        """
+        Update the object with the given request data.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            Response: The updated serialized data of the object.
+        """
+        # Retrieve the post instance
+        instance = self.get_object()
+
+        # Update the fields specified in the request data
+        serializer = self.get_serializer(instance,
+                                         data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='slug',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Slug of the post',
+                required=True,
+            )
+        ],
+        responses=PostDetailSerializer(many=False),
+    )
+    def partial_update(self, request, *args, **kwargs):
         """
         Update the object with the given request data.
 
@@ -340,7 +476,7 @@ class PostViewSet(viewsets.ModelViewSet):
         #     image = post.images.first()
         #     image_url = image.image.url
         #     response = requests.get(image_url)
-        #     response = FileResponse(
+        #     response = FileResponse(w
         #         response.content,
         #         as_attachment=True)
         #     response['Content-Type'] = 'image/png'

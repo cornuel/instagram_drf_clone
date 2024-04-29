@@ -135,6 +135,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'django_advance_thumbnail',
+    'drf_spectacular',
 ]
 
 # AWS S3 Config
@@ -151,7 +152,16 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 9,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Instagram DRF Clone',
+    'DESCRIPTION': 'This Instagram DRF Clone is a full-fledged social media platform built using Django Rest Framework. It provides a range of functionalities similar to the original Instagram platform, including user authentication, profile management, post creation, commenting, tagging, searching, and more. POST to /api/users/ to create an account then POST to /api/token/ to retrieve your token. Use your token with the Authorize button to begin making authenticated requests to the API.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
 }
 
 MIDDLEWARE = [

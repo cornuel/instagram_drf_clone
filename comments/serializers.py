@@ -17,16 +17,16 @@ class CommentSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         many=False, view_name='comments-detail', lookup_field='id')
 
-    def get_is_liked(self, obj: Comment):
+    def get_is_liked(self, obj: Comment) -> bool:
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.likes.filter(id=request.user.profile.id).exists()
         return False
 
-    def get_like_count(self, obj: Comment):
+    def get_like_count(self, obj: Comment) -> int:
         return obj.likes.count()
     
-    def get_replies_count(self, obj: Comment):
+    def get_replies_count(self, obj: Comment) -> int:
         return obj.replies.count()
 
     class Meta:

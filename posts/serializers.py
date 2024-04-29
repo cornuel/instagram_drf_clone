@@ -52,10 +52,10 @@ class PostsListSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         many=False, view_name='posts-detail', lookup_field='slug')
 
-    def get_like_count(self, obj):
+    def get_like_count(self, obj) -> int:
         return obj.likes.count()
 
-    def get_comment_count(self, obj):
+    def get_comment_count(self, obj) -> int:
         return obj.comments.count()
 
     class Meta:
@@ -95,22 +95,22 @@ class PostDetailSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    def get_is_liked(self, obj: Post):
+    def get_is_liked(self, obj: Post) -> bool:
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.likes.filter(id=request.user.profile.id).exists()
         return False
 
-    def get_like_count(self, obj: Post):
+    def get_like_count(self, obj: Post) -> int:
         return obj.likes.count()
 
-    def get_is_favorited(self, obj: Post):
+    def get_is_favorited(self, obj: Post) -> bool:
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.favorited_by.filter(id=request.user.profile.id).exists()
         return False
 
-    def get_comment_count(self, obj: Post):
+    def get_comment_count(self, obj: Post) -> int:
         return obj.comments.count()
 
     class Meta:

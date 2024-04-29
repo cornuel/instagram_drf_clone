@@ -12,10 +12,13 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from app.permissions import IsAccountOwnerOrAdmin
 from typing import List
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 
 class ProfileModelViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
+    serializer_class = PublicProfileSerializer
     lookup_field = 'username'
 
     permission_classes = {
@@ -88,18 +91,33 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         if self.action in ['retrieve', 'delete_profile_pic']:
             if self.get_object().user == user:
                 return ProfileDetailSerializer
-
-        if self.action == 'list':
+            else:
+                return PublicProfileSerializer
+        elif self.action == 'list':
             return ProfileListSerializer
-        if self.action in ['create', 'retrieve', 'update', 'partial_update', 'destroy', 'following', 'followers', 'isFollowing']:
-            return PublicProfileSerializer
-        if self.action == 'posts':
+        elif self.action == 'posts':
             return PostsListSerializer
-        return super().get_serializer_class()
+        else:
+            # 'create', 'retrieve', 'update', 'partial_update', 'destroy'
+            # 'following', 'followers', 'isFollowing'
+            return super().get_serializer_class()
 
+    
     def create(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='username',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Username of the profile',
+                required=True,
+            )
+        ],
+        responses=None,
+    )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
@@ -126,7 +144,7 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['delete'])
     def delete_profile_pic(self, request, username: str = None) -> Response:
-        """
+        """g
         Delete the profile picture of the authenticated user.
         Args:
             request (HttpRequest): The HTTP request object.

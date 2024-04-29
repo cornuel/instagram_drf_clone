@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 class SearchView(generics.ListAPIView):
     pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticated]
+    serializer_class = PublicProfileSerializer
     
     def list(self, request, *args, **kwargs):
         search_query = self.request.query_params.get('query', '')

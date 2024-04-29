@@ -19,19 +19,19 @@ class PublicProfileSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     posts_count = serializers.SerializerMethodField()
     
-    def get_is_following(self, obj: Profile):
+    def get_is_following(self, obj: Profile) -> bool:
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.followed_by.filter(id=request.user.profile.id).exists()
         return False
 
-    def get_following_count(self, obj: Profile):
+    def get_following_count(self, obj: Profile) -> int:
         return obj.follows.count()
 
-    def get_followers_count(self, obj: Profile):
+    def get_followers_count(self, obj: Profile) -> int:
         return obj.followed_by.count()
     
-    def get_posts_count(self, obj: Profile):
+    def get_posts_count(self, obj: Profile) -> int:
         return obj.posts.filter(is_private=False).count()
 
     class Meta:
@@ -73,13 +73,13 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     posts_count = serializers.SerializerMethodField()
 
-    def get_following_count(self, obj: Profile):
+    def get_following_count(self, obj: Profile) -> int:
         return obj.follows.count()
 
-    def get_followers_count(self, obj: Profile):
+    def get_followers_count(self, obj: Profile) -> int:
         return obj.followed_by.count()
     
-    def get_posts_count(self, obj: Profile):
+    def get_posts_count(self, obj: Profile) -> int:
         return obj.posts.filter(is_private=False).count()
 
     class Meta:
