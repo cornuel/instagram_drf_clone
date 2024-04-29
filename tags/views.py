@@ -6,11 +6,57 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Tag
 from .serializers import TagSerializer
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     lookup_field = 'slug'
+    
+    permission_classes = {
+        'list': {
+            'classes': [IsAdminUser],
+            'error_message': "You are not allowed."
+        },
+        'create': {
+            'classes': [IsAuthenticated],
+            'error_message': "You are not authenticated."
+        },
+        'update': {
+            'classes': [IsAdminUser],
+            'error_message': "You are not allowed."
+        },
+        'partial_update': {
+            'classes': [IsAdminUser],
+            'error_message': "You are not allowed."
+        },
+        'destroy': {
+            'classes': [IsAdminUser],
+            'error_message': "You are not allowed."
+        }
+    }
+    
+    def get_permissions(self):
+        """
+        Returns the list of permission instances that the current user has for the given action.
+
+        :return: A list of permission instances.
+        :rtype: list 
+        """
+        permissions = self.permission_classes.get(
+            self.action, {}).get('classes', [])
+        return [permission() for permission in permissions]
+    
+    def permission_denied(self, request, message=None, code=None):
+        action = self.action  # Get the current action name
+        error_message = self.permission_classes.get(
+            action, {}).get('error_message', 'Permission denied.')
+        raise PermissionDenied(error_message)
+    
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('id')
+        return queryset
             
     def create(self, request, *args, **kwargs):
         name = request.data.get('name')
@@ -28,8 +74,8 @@ class TagViewSet(viewsets.ModelViewSet):
             
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    # def list(self, request, *args, **kwargs):
+    #     return super().list(request, *args, **kwargs)
     
     # @action(detail=False, methods=['delete'])
     # def delete_all(self, request):
