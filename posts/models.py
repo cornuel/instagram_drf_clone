@@ -45,7 +45,7 @@ class Post(models.Model):
     updated = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(
         'profiles.Profile', blank=True, related_name='post_likes')
-    view_count = models.IntegerField(null=True, blank=True)
+    view_count = models.IntegerField(default=0, editable=False)
     tags = models.ManyToManyField(Tag, blank=True)
     is_featured = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
@@ -56,6 +56,10 @@ class Post(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         return super(Post, self).save(*args, **kwargs)
+    
+    def increment_view_count(self):
+        self.view_count += 1
+        self.save(update_fields=['view_count'])
 
     def __str__(self):
         return self.title

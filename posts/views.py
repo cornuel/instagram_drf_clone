@@ -169,16 +169,7 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(profile=profile)
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='slug',
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.PATH,
-                description='Slug of the post',
-                required=True,
-            )
-        ],
-        responses=PostDetailSerializer(many=False),
+        responses=PersonalPostDetailSerializer(many=False),
     )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -215,7 +206,8 @@ class PostViewSet(viewsets.ModelViewSet):
             Exception: If an error occurs while retrieving the object.
         """
 
-        instance = self.get_object()
+        instance: Post = self.get_object()
+        instance.increment_view_count()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
