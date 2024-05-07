@@ -19,6 +19,11 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+if config("ENVIRONMENT") == "dev":
+    BASE_URL = "http://127.0.0.1:8000/"
+else:
+    BASE_URL = ""
+
 FILE_UPLOAD_STORAGE = config("FILE_UPLOAD_STORAGE", default="local")
 
 if FILE_UPLOAD_STORAGE == "local":
@@ -34,31 +39,32 @@ if FILE_UPLOAD_STORAGE == "local":
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config("DEBUG", default=True, cast=bool)
 
-if config('ENVIRONMENT') == 'dev' :
-    ALLOWED_HOSTS = ['*']
+if config("ENVIRONMENT") == "dev":
+    ALLOWED_HOSTS = ["*"]
     CORS_ALLOWED_ORIGINS = [
         config("DEV_FRONTEND_HOST"),
     ]
     DB = "mysql"
-    DB_OPTIONS = {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'", "charset": "utf8mb4"}
+    DB_OPTIONS = {
+        "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        "charset": "utf8mb4",
+    }
 
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'db_mysql',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
-            'USER': 'near',
-            'PASSWORD': 'root',
-            'OPTIONS': DB_OPTIONS
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "db_mysql",
+            "HOST": "127.0.0.1",
+            "PORT": "3306",
+            "USER": "near",
+            "PASSWORD": "root",
+            "OPTIONS": DB_OPTIONS,
         }
     }
 else:
-    ALLOWED_HOSTS = [
-        config("DEPLOYED_FRONTEND_HOST")
-    ]
+    ALLOWED_HOSTS = [config("DEPLOYED_FRONTEND_HOST")]
     CORS_ALLOWED_ORIGINS = [
         config("DEPLOYED_FRONTEND_HOST"),
     ]
@@ -74,40 +80,43 @@ else:
             "OPTIONS": {
                 "location": "static",
             },
-        }
+        },
     }
     DB = "DATABASE_PYANYWHERE"
-    DB_OPTIONS = {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'", "charset": "utf8mb4"}
+    DB_OPTIONS = {
+        "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        "charset": "utf8mb4",
+    }
     DATABASES = {
-        'default': {
-            'ENGINE': config(DB + "_ENGINE"),
-            'NAME': config(DB + "_NAME"),
-            'USER': config(DB + "_USER"),
-            'PASSWORD': config(DB + "_PASSWORD"),
-            'HOST': config(DB + "_HOST"),
-            'PORT': config(DB + "_PORT"),
-            'OPTIONS': DB_OPTIONS
+        "default": {
+            "ENGINE": config(DB + "_ENGINE"),
+            "NAME": config(DB + "_NAME"),
+            "USER": config(DB + "_USER"),
+            "PASSWORD": config(DB + "_PASSWORD"),
+            "HOST": config(DB + "_HOST"),
+            "PORT": config(DB + "_PORT"),
+            "OPTIONS": DB_OPTIONS,
         }
     }
 
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'rich.logging.RichHandler',  # <-- this
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "rich.logging.RichHandler",  # <-- this
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
         },
     },
 }
@@ -116,118 +125,121 @@ LOGGING = {
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'posts',
-    'comments',
-    'users',
-    'profiles',
-    'tags',
-    'feed',
-    'search',
-    'django_extensions',
-    'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
-    'storages',
-    'django_advance_thumbnail',
-    'drf_spectacular',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "posts",
+    "comments",
+    "users",
+    "profiles",
+    "tags",
+    "feed",
+    "search",
+    "django_extensions",
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
+    "storages",
+    "django_advance_thumbnail",
+    "drf_spectacular",
 ]
 
 # AWS S3 Config
-AWS_S3_ACCESS_KEY_ID = config('AWS_S3_ACCESS_KEY_ID')
-AWS_S3_SECRET_ACCESS_KEY = config('AWS_S3_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
-AWS_S3_SIGNATURE_VERSION = config('AWS_S3_SIGNATURE_VERSION')
-AWS_S3_ADDRESSING_STYLE = config('AWS_S3_ADDRESSING_STYLE')
-AWS_S3_VERIFY = config('AWS_S3_VERIFY', default=None)
+AWS_S3_ACCESS_KEY_ID = config("AWS_S3_ACCESS_KEY_ID")
+AWS_S3_SECRET_ACCESS_KEY = config("AWS_S3_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")
+AWS_S3_SIGNATURE_VERSION = config("AWS_S3_SIGNATURE_VERSION")
+AWS_S3_ADDRESSING_STYLE = config("AWS_S3_ADDRESSING_STYLE")
+AWS_S3_VERIFY = config("AWS_S3_VERIFY", default=None)
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 9,
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_THROTTLE_CLASSES": [
+        "app.throttles.BurstRateThrottle",
+        "app.throttles.SustainedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "burst": "30/min",
+        "sustained": "1000/day",
+    },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Instagram DRF Clone',
-    'DESCRIPTION': 'This Instagram DRF Clone is a full-fledged social media platform built using Django Rest Framework. It provides a range of functionalities similar to the original Instagram platform, including user authentication, profile management, post creation, commenting, tagging, searching, and more. POST to /api/users/ to create an account then POST to /api/token/ to retrieve your token. Use your token with the Authorize button to begin making authenticated requests to the API.',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "Instagram DRF Clone",
+    "DESCRIPTION": "This Instagram DRF Clone is a full-fledged social media platform built using Django Rest Framework. It provides a range of functionalities similar to the original Instagram platform, including user authentication, profile management, post creation, commenting, tagging, searching, and more. POST to /api/users/ to create an account then POST to /api/token/ to retrieve your token. Use your token with the Authorize button to begin making authenticated requests to the API.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
     # OTHER SETTINGS
 }
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-    'REFRESH_TOKEN_LIFETIME': timedelta(weeks=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': False,
-
-    'ALGORITHM': 'HS256',
-
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-    'JWK_URL': None,
-    'LEEWAY': 0,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-    'TOKEN_OBTAIN_SERIALIZER': 'users.serializers.MyTokenObtainPairSerializer',
-
-    'JTI_CLAIM': 'jti',
-
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(hours=10),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
+    "ALGORITHM": "HS256",
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "JWK_URL": None,
+    "LEEWAY": 0,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+    "TOKEN_OBTAIN_SERIALIZER": "users.serializers.MyTokenObtainPairSerializer",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(hours=10),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
-ROOT_URLCONF = 'app.urls'
+ROOT_URLCONF = "app.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'app.wsgi.application'
+WSGI_APPLICATION = "app.wsgi.application"
 
 
 # Password validation
@@ -235,16 +247,16 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -252,9 +264,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -264,9 +276,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

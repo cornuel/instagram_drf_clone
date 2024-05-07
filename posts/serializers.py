@@ -42,6 +42,7 @@ class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
         fields = ['id', 'image', 'thumbnail']
+        
 
 class PostsListSerializer(serializers.ModelSerializer):
     profile = serializers.StringRelatedField(read_only=True)
@@ -72,6 +73,11 @@ class PostsListSerializer(serializers.ModelSerializer):
             'url'
         )
 
+# class PaginatedPostsListSerializer(serializers.ListSerializer):
+#     next = serializers.SerializerMethodField()
+#     previous = serializers.SerializerMethodField()
+#     count = serializers.SerializerMethodField()
+#     result = PostsListSerializer
 
 class PersonalPostListSerializer(PostsListSerializer):
     class Meta:
@@ -81,6 +87,7 @@ class PersonalPostListSerializer(PostsListSerializer):
 
 class PostDetailSerializer(serializers.ModelSerializer):
     # likes = PublicProfileSerializer(many=True, read_only=True)
+    slug = serializers.SlugField(read_only=True)
     tags = TagListField(child=serializers.CharField(), required=False)
     profile = serializers.StringRelatedField(read_only=True)
     like_count = serializers.SerializerMethodField()

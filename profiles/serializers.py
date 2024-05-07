@@ -5,12 +5,11 @@ from .models import Profile
 class SimpleProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = (
-            'id',
-            'username',
-            'full_name',
-            'profile_pic'
-        )
+        fields = ("id", "username", "full_name", "profile_pic")
+
+
+class FollowResponseSerializer(serializers.Serializer):
+    message = serializers.CharField(required=False)
 
 
 class PublicProfileSerializer(serializers.ModelSerializer):
@@ -18,9 +17,9 @@ class PublicProfileSerializer(serializers.ModelSerializer):
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     posts_count = serializers.SerializerMethodField()
-    
+
     def get_is_following(self, obj: Profile) -> bool:
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.followed_by.filter(id=request.user.profile.id).exists()
         return False
@@ -30,22 +29,22 @@ class PublicProfileSerializer(serializers.ModelSerializer):
 
     def get_followers_count(self, obj: Profile) -> int:
         return obj.followed_by.count()
-    
+
     def get_posts_count(self, obj: Profile) -> int:
         return obj.posts.filter(is_private=False).count()
 
     class Meta:
         model = Profile
         fields = (
-            'id',
-            'username',
-            'full_name',
-            'bio',
-            'profile_pic',
-            'posts_count',
-            'is_following',
-            'following_count',
-            'followers_count',
+            "id",
+            "username",
+            "full_name",
+            "bio",
+            "profile_pic",
+            "posts_count",
+            "is_following",
+            "following_count",
+            "followers_count",
         )
 
 
@@ -53,53 +52,25 @@ class ProfileListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = (
-            'id',
-            'full_name',
-            'bio',
-            'profile_pic',
-            'follows'
-        )
+        fields = ("id", "full_name", "bio", "profile_pic", "follows")
 
 
-class ProfileDetailSerializer(serializers.ModelSerializer):
+class ProfileDetailSerializer(PublicProfileSerializer):
+
     favorite_posts = serializers.SlugRelatedField(
-        many=True,
-        slug_field='slug',
-        read_only=True
+        many=True, slug_field="slug", read_only=True
     )
-    
-    following_count = serializers.SerializerMethodField()
-    followers_count = serializers.SerializerMethodField()
-    posts_count = serializers.SerializerMethodField()
-
-    def get_following_count(self, obj: Profile) -> int:
-        return obj.follows.count()
-
-    def get_followers_count(self, obj: Profile) -> int:
-        return obj.followed_by.count()
-    
-    def get_posts_count(self, obj: Profile) -> int:
-        return obj.posts.filter(is_private=False).count()
 
     class Meta:
         model = Profile
-        fields = (
-            'id',
-            'username',
-            'full_name',
-            'bio',
-            'profile_pic',
-            'posts_count',
-            'favorite_posts',
-            'following_count',
-            'followers_count',
-            'created_at',
-            'updated_at'
+        fields = PublicProfileSerializer.Meta.fields + (
+            "favorite_posts",
+            "created_at",
+            "updated_at",
         )
 
     def update(self, instance, validated_data):
-        instance.bio = validated_data.get('bio', instance.bio)
-        instance.image = validated_data.get('image', instance.image)
+        instance.bio = validated_data.get("bio", instance.bio)
+        instance.image = validated_data.get("image", instance.image)
         instance.save()
         return instance

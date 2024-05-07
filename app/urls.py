@@ -11,7 +11,8 @@ from comments import views as comments_views
 import feed.urls as feed
 import search.urls as search
 from decouple import config
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from app.schema import SpectacularElementsView, SpectacularRapiDocView
 
 router = routers.DefaultRouter()
 router.register(r'users',
@@ -40,7 +41,10 @@ urlpatterns = [
     path('api/search/', include(search)),
     path('api/token/', include('auth.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui')
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/schema/elements/', SpectacularElementsView.as_view(url_name='schema'), name='elements'),
+    path('api/schema/rapidoc/', SpectacularRapiDocView.as_view(url_name='schema'), name='rapidoc'),
 ]
 
 if config("ENVIRONMENT") == 'dev':

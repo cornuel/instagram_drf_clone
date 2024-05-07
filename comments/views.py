@@ -11,48 +11,52 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_view
+from drf_spectacular.types import OpenApiTypes
 from rich import print as rprint
+from .custom_schemas import comments_schema
 
 # Create your views here.
 
 
+@extend_schema_view(**comments_schema)
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    lookup_field = 'id'
+    lookup_field = "id"
 
     permission_classes = {
-        'list': {
-            'classes': [IsAuthenticated],
-            'error_message': "You are not authenticated."
+        "list": {
+            "classes": [IsAuthenticated],
+            "error_message": "You are not authenticated.",
         },
-        'retrieve': {
-            'classes': [IsAuthenticated],
-            'error_message': "You are not authenticated."
+        "retrieve": {
+            "classes": [IsAuthenticated],
+            "error_message": "You are not authenticated.",
         },
-        'create': {
-            'classes': [IsAuthenticated],
-            'error_message': "You are not authenticated."
+        "create": {
+            "classes": [IsAuthenticated],
+            "error_message": "You are not authenticated.",
         },
-        'update': {
-            'classes': [IsAccountOwnerOrAdmin],
-            'error_message': "You are not allowed to update this comment."
+        "update": {
+            "classes": [IsAccountOwnerOrAdmin],
+            "error_message": "You are not allowed to update this comment.",
         },
-        'partial_update': {
-            'classes': [IsAccountOwnerOrAdmin],
-            'error_message': "You are not allowed to partially update this comment."
+        "partial_update": {
+            "classes": [IsAccountOwnerOrAdmin],
+            "error_message": "You are not allowed to partially update this comment.",
         },
-        'destroy': {
-            'classes': [IsAccountOwnerOrAdmin],
-            'error_message': "You are not allowed to delete this comment."
+        "destroy": {
+            "classes": [IsAccountOwnerOrAdmin],
+            "error_message": "You are not allowed to delete this comment.",
         },
-        'like': {
-            'classes': [IsAuthenticated],
-            'error_message': "You are not authenticated."
+        "like": {
+            "classes": [IsAuthenticated],
+            "error_message": "You are not authenticated.",
         },
-        'likes': {
-            'classes': [IsAuthenticated],
-            'error_message': "You are not authenticated."
+        "likes": {
+            "classes": [IsAuthenticated],
+            "error_message": "You are not authenticated.",
         },
     }
 
@@ -61,14 +65,14 @@ class CommentViewSet(viewsets.ModelViewSet):
         Instantiates and returns the list of permissions that this view requires.
         """
         action = self.action
-        permissions = self.permission_classes.get(
-            action, {}).get('classes', [])
+        permissions = self.permission_classes.get(action, {}).get("classes", [])
         return [permission() for permission in permissions]
 
     def permission_denied(self, request, message=None, code=None):
         action = self.action  # Get the current action name
-        error_message = self.permission_classes.get(
-            action, {}).get('error_message', 'Permission denied.')
+        error_message = self.permission_classes.get(action, {}).get(
+            "error_message", "Permission denied."
+        )
         raise PermissionDenied(error_message)
 
     def get_queryset(self):
@@ -76,7 +80,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.action == 'likes':
+        if self.action == "likes":
             return PublicProfileSerializer
         else:
             return CommentSerializer
@@ -90,12 +94,33 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="post_id",
+                description="ID of the post to retrieve comments for",
+                type=OpenApiTypes.NUMBER,
+                required=True,
+            )
+        ]
+    )
     def list(self, request, post_id=None):
+        post_id = request.query_params.get("post_id")
+        if not post_id:
+            return Response(
+                {"message": "post_id is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
         queryset = self.queryset.filter(post__id=post_id)
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return Response(
+            serializer.data,
+        )
 
     def update(self, request, *args, **kwargs):
 
@@ -103,16 +128,16 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         # Don't allow updating the post and parent field
         data = request.data.copy()
-        data.pop('post', None)
-        data.pop('parent', None)
+        data.pop("post", None)
+        data.pop("parent", None)
 
-        serializer = self.get_serializer(instance,
-                                         data=data,
-                                         partial=True)
+        serializer = self.get_serializer(instance, data=data, partial=True)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return Response(
+            serializer.data,
+        )
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -133,11 +158,16 @@ class CommentViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                status=status.HTTP_204_NO_CONTENT,
+            )
         except Exception as e:
-            return Response("An error occurred while deleting the object.", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                "An error occurred while deleting the object.",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def like(self, request, id: int = None):
         comment: Comment = self.get_object()
         profile: Profile = request.user.profile
@@ -145,21 +175,23 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         if liked:
             comment.likes.remove(profile)
-            message = 'Comment unliked successfully'
+            message = "Comment unliked successfully"
         else:
             comment.likes.add(profile)
-            message = 'Comment liked successfully'
+            message = "Comment liked successfully"
 
         comment.save()
         serializer = self.get_serializer(comment)
 
-        return Response({
-            'message': message,
-            'status': status.HTTP_200_OK,
-            'data': serializer.data
-        })
-        
-    @action(detail=True, methods=['get'])
+        return Response(
+            {
+                "message": message,
+                "status": status.HTTP_200_OK,
+                "data": serializer.data,
+            }
+        )
+
+    @action(detail=True, methods=["get"])
     def likes(self, request, id: int = None):
         comment: Comment = self.get_object()
         likes = comment.likes.all()
