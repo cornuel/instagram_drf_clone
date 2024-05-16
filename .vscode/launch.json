@@ -6,15 +6,19 @@
     "configurations": [
         {
             "name": "Python: Django",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/manage.py",
-            "args": [
-                "runserver",
-            ],
-            "pythonArgs": ["-Xfrozen_modules=off"],
-            "django": true,
-            "justMyCode": true,
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                  "localRoot": "${workspaceFolder}",
+                  "remoteRoot": "."
+                }
+              ],
+            "justMyCode": false
         }
     ]
 }

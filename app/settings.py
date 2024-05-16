@@ -46,21 +46,17 @@ if config("ENVIRONMENT") == "dev":
     CORS_ALLOWED_ORIGINS = [
         config("DEV_FRONTEND_HOST"),
     ]
-    DB = "mysql"
-    DB_OPTIONS = {
-        "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-        "charset": "utf8mb4",
-    }
+    # DB_OPTIONS = {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'", "charset": "utf8mb4"}
 
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": "db_mysql",
-            "HOST": "127.0.0.1",
-            "PORT": "3306",
-            "USER": "near",
-            "PASSWORD": "root",
-            "OPTIONS": DB_OPTIONS,
+        'default': {
+            'ENGINE': config("SQL_ENGINE", "django.db.backends.mysql"),
+            'NAME': config('SQL_DATABASE', default='your_database_name'),
+            'USER': config('SQL_USER', default='user'),
+            'PASSWORD': config('SQL_PASSWORD', default='password'),
+            'HOST': config('SQL_HOST', default='db'),
+            'PORT': config('SQL_PORT', default='3306'),
+            # 'OPTIONS': DB_OPTIONS
         }
     }
 else:
@@ -82,6 +78,15 @@ else:
             },
         },
     }
+    # AWS S3 Config
+    AWS_S3_ACCESS_KEY_ID = config('AWS_S3_ACCESS_KEY_ID')
+    AWS_S3_SECRET_ACCESS_KEY = config('AWS_S3_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
+    AWS_S3_SIGNATURE_VERSION = config('AWS_S3_SIGNATURE_VERSION')
+    AWS_S3_ADDRESSING_STYLE = config('AWS_S3_ADDRESSING_STYLE')
+    AWS_S3_VERIFY = config('AWS_S3_VERIFY', default=None)
+    
     DB = "DATABASE_PYANYWHERE"
     DB_OPTIONS = {
         "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -146,15 +151,6 @@ INSTALLED_APPS = [
     "django_advance_thumbnail",
     "drf_spectacular",
 ]
-
-# AWS S3 Config
-AWS_S3_ACCESS_KEY_ID = config("AWS_S3_ACCESS_KEY_ID")
-AWS_S3_SECRET_ACCESS_KEY = config("AWS_S3_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")
-AWS_S3_SIGNATURE_VERSION = config("AWS_S3_SIGNATURE_VERSION")
-AWS_S3_ADDRESSING_STYLE = config("AWS_S3_ADDRESSING_STYLE")
-AWS_S3_VERIFY = config("AWS_S3_VERIFY", default=None)
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",

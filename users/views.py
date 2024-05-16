@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from .serializers import UserSerializer
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from app.permissions import IsAccountOwnerOrAdmin
 from rest_framework import status
 from drf_spectacular.utils import extend_schema_view
@@ -16,6 +16,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     lookup_field = "username"
 
     permission_classes = {
+        "create": [AllowAny],
         "list": [IsAdminUser],
         "destroy": [IsAccountOwnerOrAdmin],
     }
