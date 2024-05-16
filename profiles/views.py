@@ -112,6 +112,8 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
                 return ProfileDetailSerializer
             else:
                 return PublicProfileSerializer
+        elif self.action == "update":
+            return ProfileDetailSerializer
         elif self.action == "list":
             return ProfileListSerializer
         elif self.action == "posts":
@@ -121,8 +123,10 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
             # 'following', 'followers', 'isFollowing'
             return super().get_serializer_class()
 
-    ######## VIEWS ########
+    # VIEWS
+    ########################################
 
+    # The profile is automatically created on user creation
     def create(self, request, *args, **kwargs):
         return Response(
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -156,7 +160,8 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
-    ####### ACTIONS ########
+    # ACTIONS
+    ########################################
 
     @action(detail=True, methods=["delete"])
     def delete_profile_pic(self, request, username: str = None) -> Response:

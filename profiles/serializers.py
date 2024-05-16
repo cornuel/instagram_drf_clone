@@ -13,10 +13,14 @@ class FollowResponseSerializer(serializers.Serializer):
 
 
 class PublicProfileSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
     is_following = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     posts_count = serializers.SerializerMethodField()
+
+    def get_username(self, obj: Profile) -> str:
+        return obj.username
 
     def get_is_following(self, obj: Profile) -> bool:
         request = self.context.get("request")
@@ -52,13 +56,21 @@ class ProfileListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ("id", "full_name", "bio", "profile_pic", "follows")
+        fields = (
+            "id",
+            "full_name",
+            "bio",
+            "profile_pic",
+            "follows",
+        )
 
 
 class ProfileDetailSerializer(PublicProfileSerializer):
 
     favorite_posts = serializers.SlugRelatedField(
-        many=True, slug_field="slug", read_only=True
+        many=True,
+        slug_field="slug",
+        read_only=True,
     )
 
     class Meta:
@@ -69,8 +81,23 @@ class ProfileDetailSerializer(PublicProfileSerializer):
             "updated_at",
         )
 
-    def update(self, instance, validated_data):
-        instance.bio = validated_data.get("bio", instance.bio)
-        instance.image = validated_data.get("image", instance.image)
+    def update(
+        self,
+        instance: Profile,
+        validated_data,
+    ):
+        instance.bio = validated_data.get(
+            "bio",
+            instance.bio,
+        )
+        instance.full_name = validated_data.get(
+            "full_name",
+            instance.full_name,
+        )
+
+        profile_pic = validated_data.pop("profile_pic", None)
+        if profile_pic is not None:
+            instance.profile_pic = profile_pic
+
         instance.save()
         return instance

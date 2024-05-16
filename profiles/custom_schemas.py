@@ -30,21 +30,22 @@ profiles_retrieve_schema = extend_schema(
                 },
                 resource_type_field_name="",
             )
-            # examples=[
-            #     OpenApiExample(
-            #         name="OwnProfile",
-            #         media_type="application/json",
-            #         status_codes=[200],
-            #         # value=ProfileDetailSerializer(),
-            #     ),
-            #     OpenApiExample(
-            #         name="OtherProfile",
-            #         media_type="application/json",
-            #         status_codes=[200],
-            #         # value=PublicProfileSerializer(),
-            #     ),
-            # ],
-        )
+        ),
+        404: OpenApiResponse(
+            description="No Profile matches the given query.",
+            response=inline_serializer(
+                name="404Follow",
+                fields={"detail": serializers.CharField()},
+            ),
+            examples=[
+                OpenApiExample(
+                    name="Not Found",
+                    media_type="application/json",
+                    status_codes=[404],
+                    value={"detail": "No Profile matches the given query."},
+                ),
+            ],
+        ),
     },
 )
 profiles_list_schema = extend_schema(
@@ -64,19 +65,25 @@ profiles_update_schema = extend_schema(
     summary="Update your profile",
     description="Can only be done by the owner of the profile.",
     tags=["Profile"],
-    responses=None,
+    responses={
+        200: ProfileDetailSerializer,
+    },
 )
 profiles_delete_profile_pic_schema = extend_schema(
     summary="Delete your profile picture",
     description="Can only be done by the owner of the profile.",
     tags=["Profile"],
-    responses={200: ProfileDetailSerializer},
+    responses={
+        200: ProfileDetailSerializer,
+    },
 )
 profiles_posts_schema = extend_schema(
     summary="Retrieve a user's posts",
     description="Retrieves the posts associated with a user's profile.",
     tags=["Post"],
-    responses={200: PostsListSerializer(many=True)},
+    responses={
+        200: PostsListSerializer(many=True),
+    },
 )
 profiles_follow_schema = extend_schema(
     summary="Follow/unfollow a user's profile",
